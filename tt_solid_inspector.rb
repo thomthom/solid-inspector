@@ -33,6 +33,17 @@ TT::Lib.compatible?('2.0.0', 'TT Solid Inspector')
 #-------------------------------------------------------------------------------
 
 module TT::Plugins::SolidInspector
+
+  ### CONSTANTS ### ------------------------------------------------------------
+  
+  # Plugin information
+  ID          = 'TT_SolidInspector'.freeze
+  VERSION     = '1.1.0'.freeze
+  PLUGIN_NAME = 'Solid Inspector'.freeze
+  
+  # Resource paths
+  PATH_ROOT   = File.dirname( __FILE__ ).freeze
+  
   
   ### MENU & TOOLBARS ### ------------------------------------------------------
   
