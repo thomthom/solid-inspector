@@ -241,7 +241,7 @@ module TT::Plugins::SolidInspector
   # @note Debug method to reload the plugin.
   #
   # @example
-  #   TT::Plugins::Template.reload
+  #   TT::Plugins::SolidInspector.reload
   #
   # @param [Boolean] tt_lib
   #
