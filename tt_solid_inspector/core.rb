@@ -4,46 +4,33 @@
 # thomas[at]thomthom[dot]net
 #
 #-------------------------------------------------------------------------------
-#
-# CHANGELOG
-# 1.1.0 - 30.06.2011
-#   * Inspects current context if nothing is selected.
-#
-# 1.0.0a - 29.08.2010
-#   * Added TT_Lib2 support.
-#
-# 0.1.0a - 12.08.2010
-#   * Initial Release.
-#
-#-------------------------------------------------------------------------------
-#
-# TODO:
-# Compile list of errors.
-# * Click item to zoom to error.
-# * Describe errors. (Open face, small edge, internal edge/face, stray edge.)
-# * Attempt to fix error automatically if possible.
-#
-#-------------------------------------------------------------------------------
 
 require 'sketchup.rb'
-require 'TT_Lib2/core.rb'
+begin
+  require 'TT_Lib2/core.rb'
+rescue LoadError => e
+  module TT
+    if @lib2_update.nil?
+      url = 'http://www.thomthom.net/software/sketchup/tt_lib2/errors/not-installed'
+      options = {
+        :dialog_title => 'TT_Lib² Not Installed',
+        :scrollable => false, :resizable => false, :left => 200, :top => 200
+      }
+      w = UI::WebDialog.new( options )
+      w.set_size( 500, 300 )
+      w.set_url( "#{url}?plugin=#{File.basename( __FILE__ )}" )
+      w.show
+      @lib2_update = w
+    end
+  end
+end
 
-TT::Lib.compatible?('2.0.0', 'TT Solid Inspector')
 
 #-------------------------------------------------------------------------------
 
-module TT::Plugins::SolidInspector
+if defined?( TT::Lib ) && TT::Lib.compatible?( '2.7.0', 'Solid Inspector' )
 
-  ### CONSTANTS ### ------------------------------------------------------------
-  
-  # Plugin information
-  ID          = 'TT_SolidInspector'.freeze
-  VERSION     = '1.1.0'.freeze
-  PLUGIN_NAME = 'Solid Inspector'.freeze
-  
-  # Resource paths
-  PATH_ROOT   = File.dirname( __FILE__ ).freeze
-  
+module TT::Plugins::SolidInspector 
   
   ### MENU & TOOLBARS ### ------------------------------------------------------
   
@@ -235,17 +222,16 @@ module TT::Plugins::SolidInspector
   end # class SolidInspector
 
   
-  ### HELPER METHODS ### -------------------------------------------------------
-
+  ### DEBUG ### ------------------------------------------------------------  
   
   # @note Debug method to reload the plugin.
   #
   # @example
   #   TT::Plugins::SolidInspector.reload
   #
-  # @param [Boolean] tt_lib
+  # @param [Boolean] tt_lib Reloads TT_Lib2 if +true+.
   #
-  # @return [Integer]
+  # @return [Integer] Number of files reloaded.
   # @since 1.0.0
   def self.reload( tt_lib = false )
     original_verbose = $VERBOSE
@@ -253,14 +239,25 @@ module TT::Plugins::SolidInspector
     TT::Lib.reload if tt_lib
     # Core file (this)
     load __FILE__
+    # Supporting files
+    if defined?( PATH ) && File.exist?( PATH )
+      x = Dir.glob( File.join(PATH, '*.{rb,rbs}') ).each { |file|
+        load file
+      }
+      x.length + 1
+    else
+      1
+    end
   ensure
     $VERBOSE = original_verbose
   end
   
 end # module
 
+end # if TT_Lib
+
 #-------------------------------------------------------------------------------
 
-file_loaded( File.basename(__FILE__) )
+file_loaded( __FILE__ )
 
 #-------------------------------------------------------------------------------
