@@ -1,0 +1,273 @@
+#-------------------------------------------------------------------------------
+#
+# Thomas Thomassen
+# thomas[at]thomthom[dot]net
+#
+#-------------------------------------------------------------------------------
+
+require "set"
+
+
+module TT::Plugins::SolidInspector
+
+  module ErrorFinder
+
+    def self.find_errors(entities)
+      raise TypeError unless entities.is_a?(Sketchup::Entities)
+
+      errors = []
+      border_edges = Set.new
+      possible_internal_faces = Set.new
+      possible_reversed_faces = Set.new
+
+      # First check the edges.
+      entities.grep(Sketchup::Edge) { |edge|
+        num_faces = edge.faces.size
+        if num_faces == 2
+          # If an edge between two faces is reversed in both then one of the
+          # faces needs to be reversed.
+          face1, face2 = edge.faces
+          if edge.reversed_in?(face1) == edge.reversed_in?(face2)
+            possible_reversed_faces.merge(edge.faces)
+          end
+        elsif num_faces == 0
+          errors << StrayEdge.new(edge)
+          is_manifold = false
+        elsif num_faces == 1
+          # We want to later sort the edges by what hole they belong to.
+          border_edges << edge
+        elsif num_faces > 2
+          # We don't know yet which of the edges are internal. We process these
+          # later.
+          possible_internal_faces.merge(edge.faces)
+        end
+      }
+
+      if border_edges.size > 0
+        border_edges.each { |edge|
+          face = edge.faces.first
+          if face.outer_loop.edges.include?(edge)
+            # Face part of mesh border.
+            # TODO: Sort edges by the border they belong to.
+            errors << BorderEdge.new(edge)
+          else
+            errors << HoleEdge.new(edge)
+          end
+        }
+      end
+
+      if possible_internal_faces.size > 0
+        # Determine which faces are internal.
+        possible_internal_faces.each { |face|
+          if self.internal_face?(face)
+            errors << InternalFace.new(face)
+          end
+        }
+      end
+
+      # If there was no border edges or faces connected to more than two faces
+      # then we can scan the surface of the mesh to check that the face normals
+      # are oriented consistently.
+      # Stray edges are ignored from this because they won't interfere with the
+      # surface detection.
+      is_manifold = border_edges.empty? && possible_internal_faces.empty?
+      if is_manifold
+        possible_reversed_faces.each { |face|
+          if self.reversed_face?(face)
+            errors << ReversedFace.new(face)
+          end
+        }
+        # TODO: Take into account that all faces could be consistently faced
+        # "inward" and they might all need to be reversed. Take one face and
+        # check if it's facing "outward" - if it doesn't, reverse all the faces.
+      end
+
+      errors
+    end
+
+
+    def self.reversed_face?(face)
+      entities = face.parent
+      centroid = self.centroid(face)
+      # Shoot rays in the direction of the front side of the face. If we hit
+      # odd number of intersections the face is facing "inward" in the manifold.
+      ray = [centroid, face.normal]
+      intersections = self.count_ray_intersections(ray, entities)
+      intersections % 2 > 0
+    end
+
+
+    def self.internal_face?(face)
+      entities = face.parent
+      # TODO: Check if the centroid is over a hole? Maybe use the centroid of
+      # one of the face's triangles?
+      centroid = self.centroid(face)
+      # Shoot rays in each direction of the face and count how many times it
+      # intersect with the current entities set.
+      ray = [centroid, face.normal]
+      intersections = self.count_ray_intersections(ray, entities)
+
+      ray = [centroid, face.normal.reverse]
+      intersections += self.count_ray_intersections(ray, entities)
+      # Even number of intersections indiate the face is internal.
+      intersections % 2 == 0
+    end
+
+
+    def self.count_ray_intersections(ray, entities)
+      model = entities.model
+      result = model.raytest(ray, false)
+      direction = ray[1]
+      count = 0
+      until result.nil? || count > 100 # Temp safety limit.
+        # TODO: Check if the returned point hit within the instance.
+        count += 1
+        point, path = result
+        ray = [point, direction]
+        result = model.raytest(ray, false)
+      end
+      count
+    end
+
+
+    def self.centroid(face)
+      x = y = z = 0.0
+      face.vertices.each { |vertex|
+        point = vertex.position
+        x += point.x
+        y += point.y
+        z += point.z
+      }
+      num_vertices = face.vertices.size
+      x /= num_vertices
+      y /= num_vertices
+      z /= num_vertices
+      Geom::Point3d.new(x, y, z)
+    end
+
+  end # module
+
+
+  class SolidError
+
+    attr_accessor :entity
+
+    def initialize(entity)
+      @entity = entity
+      @fixed = false
+      @erase_to_fix = false
+    end
+
+    def fix
+      if @erase_to_fix
+        return false if @entity.deleted?
+        @entity.erase!
+        @fixed = true
+        true
+      else
+        raise NotImplementedError
+      end
+    end
+
+    def fixed?
+      @fixed ? true : false
+    end
+
+    def draw(view)
+      raise NotImplementedError
+    end
+
+  end # class
+
+
+  # TODO: HiddenFace (?)
+  # TODO: FaceHoleEdge
+  # TODO: MeshHoleEdge (?)
+
+
+  # Mix-in module to mark that an erro can be fixed by erasing the entity.
+  # The purpose of this is to be able to perform a bulk erase operation which
+  # is much faster than calling .erase! on each entity.
+  module EraseToFix
+
+    def initialize(*args)
+      super
+      @erase_to_fix = true
+    end
+
+  end # module
+
+
+  # The edge a border edge, connected to one face, but not part of an inner
+  # loop. It could be part of a stray face, border of a non-manifold surface or
+  # part of a complex hole that needs multiple faces to heal.
+  class BorderEdge < SolidError
+  end # class
+
+
+  # The edge is a border edge, connected to one face, and part of one of the
+  # inner loops of the face.
+  class HoleEdge < SolidError
+
+    include EraseToFix
+
+    def fix
+      return false if @entity.deleted?
+      # Find all the edges for the inner loop the edge is part of and erase all
+      # of them.
+      entities = @entity.parent
+      face = @entity.faces.first
+      edge_loop = face.loops.find { |loop| loop.edges.include?(@entity) }
+      entities.erase_entities(edge_loop.edges)
+      @fixed = true
+      true
+    end
+
+  end # class
+
+
+  # The face is located on the inside of what could be a manifold mesh.
+  class InternalFace < SolidError
+
+    include EraseToFix
+
+  end # class
+
+
+  # The face is not oriented consistently with the rest of the surface of the
+  # manifold. It is facing "inwards" and should be reversed.
+  class ReversedFace < SolidError
+
+    def fix
+      return false if @entity.deleted?
+      @entity.reverse!
+      @fixed = true
+      true
+    end
+
+  end # class
+
+
+  # Stray edges which isn't part in forming any faces.
+  class StrayEdge < SolidError
+
+    include EraseToFix
+
+  end # class
+
+
+  # TODO: Is this needed? STL export flattens the nested hierarchy of instances.
+  # Maybe it shouldn't "fix" by exploding but instead yield a message to why
+  # SketchUp's Enity Info dialog doesn't say "Solid".
+  class NestedInstance < SolidError
+
+    def fix
+      return false if @entity.deleted?
+      @entity.explode
+      @fixed = true
+      true
+    end
+
+  end # class
+
+end # module
