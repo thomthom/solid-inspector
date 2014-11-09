@@ -5,40 +5,17 @@
 #
 #-------------------------------------------------------------------------------
 
-require 'sketchup.rb'
-begin
-  require 'TT_Lib2/core.rb'
-rescue LoadError => e
-  module TT
-    if @lib2_update.nil?
-      url = 'http://www.thomthom.net/software/sketchup/tt_lib2/errors/not-installed'
-      options = {
-        :dialog_title => 'TT_Lib² Not Installed',
-        :scrollable => false, :resizable => false, :left => 200, :top => 200
-      }
-      w = UI::WebDialog.new( options )
-      w.set_size( 500, 300 )
-      w.set_url( "#{url}?plugin=#{File.basename( __FILE__ )}" )
-      w.show
-      @lib2_update = w
-    end
-  end
-end
-
-
-#-------------------------------------------------------------------------------
-
-if defined?( TT::Lib ) && TT::Lib.compatible?( '2.7.0', 'Solid Inspector' )
 
 module TT::Plugins::SolidInspector
 
   require File.join(PATH, "error_finder.rb")
+  require File.join(PATH, "instance.rb")
 
 
   ### MENU & TOOLBARS ### ------------------------------------------------------
 
   unless file_loaded?(__FILE__)
-    m = TT.menu('Tools')
+    m = UI.menu('Tools')
     m.add_item('Solid Inspector')  { self.inspect_solid }
 
     file_loaded(__FILE__)
@@ -47,49 +24,41 @@ module TT::Plugins::SolidInspector
 
   ### MAIN SCRIPT ### ----------------------------------------------------------
 
-  # @since 1.0.0
   def self.inspect_solid
-    Sketchup.active_model.tools.push_tool( SolidInspector.new )
+    Sketchup.active_model.select_tool(InspectorTool.new)
   end
 
 
-  # @since 1.0.0
-  class SolidInspector
+  class InspectorTool
 
-    # @since 1.0.0
     def initialize
       @instance = nil
       @errors = []
       @current_error = 0
       @groups = []
 
-      @status = "Click on solids to inspect. Use arrow keys to cycle between errors. Press Return to zoom to error. Press Tab/Shift+Tab to cycle though errors and zoom."
+      @status = "Click on solids to inspect. Use arrow keys to cycle between "\
+        "errors. Press Return to zoom to error. Press Tab/Shift+Tab to cycle "\
+        "though errors and zoom."
 
       if Sketchup.active_model.selection.empty?
-        analyze( nil )
+        analyze(nil)
       else
         Sketchup.active_model.selection.each { |e|
-          next unless TT::Instance.is?(e)
+          next unless Instance.is?(e)
           analyze(e)
           break
         }
       end
     end
 
-    def getMenu(menu)
-      menu.add_item("Find Errors") {
-        find_errors
-      }
-    end
-
-    # @since 1.0.0
-    def analyze(instance)
+    def analyze_old(instance)
       @instance = instance
 
       if @instance
         Sketchup.active_model.selection.clear
-        Sketchup.active_model.selection.add( @instance )
-        entities = TT::Instance.definition(@instance).entities
+        Sketchup.active_model.selection.add(@instance)
+        entities = Instance.definition(@instance).entities
         @transformation = @instance.transformation
       else
         entities = Sketchup.active_model.active_entities
@@ -99,7 +68,7 @@ module TT::Plugins::SolidInspector
       # Any edge without two faces means an error in the surface of the solid.
       @current_error = 0
       @errors = entities.select { |e|
-        e.is_a?( Sketchup::Edge ) && e.faces.length != 2
+        e.is_a?(Sketchup::Edge) && e.faces.length != 2
       }
 
       # Group connected error-edges.
@@ -115,9 +84,9 @@ module TT::Plugins::SolidInspector
         until haystack.empty?
           e = haystack.shift
 
-          if stack.include?( e )
+          if stack.include?(e)
             cluster << e
-            stack.delete( e )
+            stack.delete(e)
             haystack += ([e.start.edges + e.end.edges] - [e]).first & stack
           end
         end
@@ -126,34 +95,29 @@ module TT::Plugins::SolidInspector
       end
     end
 
-    # @since 1.0.0
     def activate
       Sketchup.active_model.active_view.invalidate
       Sketchup.status_text = @status
     end
 
-    # @since 1.0.0
     def deactivate(view)
       view.invalidate
     end
 
-    # @since 1.0.0
     def resume(view)
       view.invalidate
       Sketchup.status_text = @status
     end
 
-    # @since 1.0.0
     def onLButtonUp(flags, x, y, view)
       ph = view.pick_helper
       ph.do_pick(x, y)
-      if TT::Instance.is?( ph.best_picked )
-        analyze( ph.best_picked )
+      if Instance.is?(ph.best_picked)
+        analyze(ph.best_picked)
       end
       view.invalidate
     end
 
-    # @since 1.0.0
     def onKeyUp(key, repeat, flags, view)
       return if @groups.empty?
 
@@ -186,71 +150,39 @@ module TT::Plugins::SolidInspector
       view.invalidate
     end
 
-    # @since 1.0.0
     def zoom_to_error(view)
       e = @groups[ @current_error ]
-      view.zoom( e )
+      view.zoom(e)
       # Adjust camera for the instance transformation
       camera = view.camera
       t = @transformation
-      eye = camera.eye.transform( t )
-      target = camera.target.transform( t )
-      up = camera.up.transform( t )
-      view.camera.set( eye, target, up )
+      eye = camera.eye.transform(t)
+      target = camera.target.transform(t)
+      up = camera.up.transform(t)
+      view.camera.set(eye, target, up)
     end
 
-    # @since 1.0.0
     def draw(view)
-      return # DEBUG!
-      view.line_width = 3
-      view.line_stipple = ''
-
-      unless @groups.empty?
-        @groups.each_index { |index|
-          error = @groups[index]
-
-          view.drawing_color = (index == @current_error) ? 'red' : 'orange'
-
-          # Get points for each error edge
-          pts = error.map { |e| e.vertices.map{|v|v.position} }.flatten
-          pts.map! { |pt| pt.transform( @transformation ) }
-
-          view.draw(GL_LINES, pts)
-
-          # Draw Attention Circle
-          pts2d = pts.map { |pt| view.screen_coords(pt) }
-
-          bb = Geom::BoundingBox.new
-          bb.add( pts2d )
-          size = bb.corner(0).distance( bb.corner(7) )
-          size = 20 if size < 20 # Ensure a minimum size of the circle
-
-          c = TT::Geom3d.circle( bb.center, Z_AXIS, size, 64 )
-          view.draw2d( GL_LINE_LOOP, c )
-        }
-      end
+      @errors.each { |error|
+        begin
+          error.draw(view)
+        rescue NotImplementedError
+        end
+      }
     end
 
     private
 
-    def find_errors
-      model = Sketchup::active_model
-
-      entities = model.active_entities
-      errors = ErrorFinder.find_errors(entities)
-      puts errors.join("\n")
-
-      model.start_operation("Highlight Errors", true)
-      errors.each { |error|
-        error.entity.material = "red"
-        if error.entity.respond_to?(:back_material)
-          error.entity.back_material = "purple"
-        end
-      }
-      model.commit_operation
+    def analyze(instance)
+      puts "analyse"
+      model = Sketchup.active_model # TODO
+      entities = model.active_entities # TODO
+      @errors = ErrorFinder.find_errors(entities)
+      puts "> Errors: #{@errors.size}"
+      nil
     end
 
-  end # class SolidInspector
+  end # class InspectorTool
 
 
   ### DEBUG ### ------------------------------------------------------------
@@ -260,19 +192,15 @@ module TT::Plugins::SolidInspector
   # @example
   #   TT::Plugins::SolidInspector.reload
   #
-  # @param [Boolean] tt_lib Reloads TT_Lib2 if +true+.
-  #
   # @return [Integer] Number of files reloaded.
-  # @since 1.0.0
-  def self.reload( tt_lib = false )
+  def self.reload()
     original_verbose = $VERBOSE
     $VERBOSE = nil
-    TT::Lib.reload if tt_lib
     # Core file (this)
     load __FILE__
     # Supporting files
-    if defined?( PATH ) && File.exist?( PATH )
-      x = Dir.glob( File.join(PATH, '*.{rb,rbs}') ).each { |file|
+    if defined?(PATH) && File.exist?(PATH)
+      x = Dir.glob(File.join(PATH, '*.{rb,rbs}')).each { |file|
         load file
       }
       x.length + 1
@@ -284,11 +212,3 @@ module TT::Plugins::SolidInspector
   end
 
 end # module
-
-end # if TT_Lib
-
-#-------------------------------------------------------------------------------
-
-file_loaded( __FILE__ )
-
-#-------------------------------------------------------------------------------
