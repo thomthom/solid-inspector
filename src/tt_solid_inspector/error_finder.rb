@@ -10,6 +10,9 @@ require "set"
 
 module TT::Plugins::SolidInspector
 
+  require File.join(PATH, "gl_helper.rb")
+
+
   module ErrorFinder
 
     def self.find_errors(entities)
@@ -131,17 +134,22 @@ module TT::Plugins::SolidInspector
 
 
     def self.centroid(face)
+      points = face.vertices.map { |vertex| vertex.position }
+      self.average(points)
+    end
+
+
+    def self.average(points)
       x = y = z = 0.0
-      face.vertices.each { |vertex|
-        point = vertex.position
+      points.each { |point|
         x += point.x
         y += point.y
         z += point.z
       }
-      num_vertices = face.vertices.size
-      x /= num_vertices
-      y /= num_vertices
-      z /= num_vertices
+      num_points = points.size
+      x /= num_points
+      y /= num_points
+      z /= num_points
       Geom::Point3d.new(x, y, z)
     end
 
@@ -149,6 +157,11 @@ module TT::Plugins::SolidInspector
 
 
   class SolidError
+
+    ERROR_COLOR_EDGE = Sketchup::Color.new(255, 0, 0, 255).freeze
+    ERROR_COLOR_FACE = Sketchup::Color.new(255, 0, 0, 128).freeze
+
+    include GL_Helper
 
     attr_accessor :entity
 
@@ -185,6 +198,22 @@ module TT::Plugins::SolidInspector
   # TODO: MeshHoleEdge (?)
 
 
+  # Healing MeshHoles:
+  # c1 = average of hole vertices
+  #
+  # pts = []
+  # for each edge in hole
+  #   pts << project c1 to face.plane connected to edge
+  # end
+  # c2 = average of pts
+  #
+  # c3 = average of c1 and c2
+  #
+  # for each edge in hole
+  #   add face from edge vertices to c3
+  # end
+
+
   # Mix-in module to mark that an erro can be fixed by erasing the entity.
   # The purpose of this is to be able to perform a bulk erase operation which
   # is much faster than calling .erase! on each entity.
@@ -202,6 +231,13 @@ module TT::Plugins::SolidInspector
   # loop. It could be part of a stray face, border of a non-manifold surface or
   # part of a complex hole that needs multiple faces to heal.
   class BorderEdge < SolidError
+
+    def draw(view)
+      view.drawing_color = ERROR_COLOR_EDGE
+      draw_edge(view, @entity)
+      nil
+    end
+
   end # class
 
 
@@ -223,6 +259,12 @@ module TT::Plugins::SolidInspector
       true
     end
 
+    def draw(view)
+      view.drawing_color = ERROR_COLOR_EDGE
+      draw_edge(view, @entity)
+      nil
+    end
+
   end # class
 
 
@@ -230,6 +272,13 @@ module TT::Plugins::SolidInspector
   class InternalFace < SolidError
 
     include EraseToFix
+
+    def draw(view)
+      view.drawing_color = ERROR_COLOR_FACE
+      draw_face(view, @entity)
+      # TODO: Draw edges? Maybe in 2d to ensure the face is seen?
+      nil
+    end
 
   end # class
 
@@ -245,6 +294,12 @@ module TT::Plugins::SolidInspector
       true
     end
 
+    def draw(view)
+      view.drawing_color = ERROR_COLOR_FACE
+      draw_face(view, @entity)
+      nil
+    end
+
   end # class
 
 
@@ -252,6 +307,12 @@ module TT::Plugins::SolidInspector
   class StrayEdge < SolidError
 
     include EraseToFix
+
+    def draw(view)
+      view.drawing_color = ERROR_COLOR_EDGE
+      draw_edge(view, @entity)
+      nil
+    end
 
   end # class
 
@@ -268,6 +329,12 @@ module TT::Plugins::SolidInspector
       true
     end
 
+    def draw(view)
+      view.drawing_color = ERROR_COLOR_EDGE
+      draw_instance(view, @entity)
+      nil
+    end
+
   end # class
 
-end # module
+end # module TT::Plugins::SolidInspector
