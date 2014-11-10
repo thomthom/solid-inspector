@@ -19,33 +19,9 @@ module TT::Plugins::SolidInspector2
 
 
     def initialize
-      puts "InspectorTool.initialize"
       @errors = []
       @current_error = 0
-
-      model = Sketchup.active_model
-      entities = model.active_entities
-      instance_path = model.active_path || []
-      transformation = Geom::Transformation.new
-
-      unless model.selection.empty?
-        puts "> Selection:"
-        instance = Sketchup.active_model.selection.find { |entity|
-          Instance.is?(entity)
-        }
-        puts "  > Instance: #{instance.inspect}"
-        if instance
-          definition = Instance.definition(instance)
-          entities = definition.entities
-          instance_path << instance
-          transformation = instance.transformation
-        end
-      end
-
-      puts "> Entities: #{entities}"
-      puts "> Instance Path: #{instance_path.inspect}"
-      puts "> Transformation: #{transformation.to_a}"
-      analyze(entities, instance_path, transformation)
+      analyze
       nil
     end
 
@@ -53,27 +29,33 @@ module TT::Plugins::SolidInspector2
     def activate
       Sketchup.active_model.active_view.invalidate
       update_ui
+      nil
     end
 
 
     def deactivate(view)
       view.invalidate
+      nil
     end
 
 
     def resume(view)
       view.invalidate
       update_ui
+      nil
     end
 
 
     def onLButtonUp(flags, x, y, view)
       ph = view.pick_helper
       ph.do_pick(x, y)
+      view.model.selection.clear
       if Instance.is?(ph.best_picked)
-        analyze(ph.best_picked)
+        view.model.selection.add(ph.best_picked)
       end
+      analyze
       view.invalidate
+      nil
     end
 
 
@@ -121,8 +103,33 @@ module TT::Plugins::SolidInspector2
     private
 
 
-    def analyze(entities, instance_path, transformation)
+    def analyze
       puts "analyse"
+
+      model = Sketchup.active_model
+      entities = model.active_entities
+      instance_path = model.active_path || []
+      transformation = Geom::Transformation.new
+
+      unless model.selection.empty?
+        puts "> Selection:"
+        instance = Sketchup.active_model.selection.find { |entity|
+          Instance.is?(entity)
+        }
+        puts "  > Instance: #{instance.inspect}"
+        if instance
+          definition = Instance.definition(instance)
+          entities = definition.entities
+          instance_path << instance
+          transformation = instance.transformation
+        end
+      end
+
+      puts "> Entities: #{entities}"
+      puts "> Instance Path: #{instance_path.inspect}"
+      puts "> Transformation: #{transformation.to_a}"
+
+      @current_error = 0
       @errors = ErrorFinder.find_errors(entities)
       puts "> Errors: #{@errors.size}"
       puts @errors.join("\n")
