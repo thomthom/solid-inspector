@@ -186,7 +186,7 @@ module TT::Plugins::SolidInspector2
       @fixed ? true : false
     end
 
-    def draw(view)
+    def draw(view, transformation = nil)
       raise NotImplementedError
     end
 
@@ -232,9 +232,9 @@ module TT::Plugins::SolidInspector2
   # part of a complex hole that needs multiple faces to heal.
   class BorderEdge < SolidError
 
-    def draw(view)
+    def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_EDGE
-      draw_edge(view, @entity)
+      draw_edge(view, @entity, transformation)
       nil
     end
 
@@ -259,9 +259,9 @@ module TT::Plugins::SolidInspector2
       true
     end
 
-    def draw(view)
+    def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_EDGE
-      draw_edge(view, @entity)
+      draw_edge(view, @entity, transformation)
       nil
     end
 
@@ -273,9 +273,9 @@ module TT::Plugins::SolidInspector2
 
     include EraseToFix
 
-    def draw(view)
+    def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_FACE
-      draw_face(view, @entity)
+      draw_face(view, @entity, transformation)
       # TODO: Draw edges? Maybe in 2d to ensure the face is seen?
       nil
     end
@@ -294,9 +294,9 @@ module TT::Plugins::SolidInspector2
       true
     end
 
-    def draw(view)
+    def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_FACE
-      draw_face(view, @entity)
+      draw_face(view, @entity, transformation)
       nil
     end
 
@@ -308,9 +308,9 @@ module TT::Plugins::SolidInspector2
 
     include EraseToFix
 
-    def draw(view)
+    def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_EDGE
-      draw_edge(view, @entity)
+      draw_edge(view, @entity, transformation)
       nil
     end
 
@@ -329,9 +329,9 @@ module TT::Plugins::SolidInspector2
       true
     end
 
-    def draw(view)
+    def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_EDGE
-      draw_instance(view, @entity)
+      draw_instance(view, @entity, transformation)
       nil
     end
 

@@ -18,25 +18,28 @@ module TT::Plugins::SolidInspector2
 
     PIXEL_OFFSET = 1
 
-    def draw_instance(view, instance)
+    def draw_instance(view, instance, transformation = nil)
       points = boundingbox_segments(instance.bounds)
+      transform_points(points, transformation)
       view.line_stipple = ""
       view.line_width = 2
       view.draw(GL_LINES, points)
       nil
     end
 
-    def draw_edge(view, edge)
+    def draw_edge(view, edge, transformation = nil)
       points = offset_toward_camera(view, edge.vertices)
+      transform_points(points, transformation)
       view.line_stipple = ""
       view.line_width = 3
       view.draw(GL_LINES, points)
       nil
     end
 
-    def draw_face(view, face)
+    def draw_face(view, face, transformation = nil)
       mesh = face.mesh(POLYGON_MESH_POINTS)
       points = offset_toward_camera(view, mesh.points)
+      transform_points(points, transformation)
       triangles = []
       mesh.polygons.each { |polygon|
         polygon.each { |index|
@@ -47,6 +50,12 @@ module TT::Plugins::SolidInspector2
       }
       view.draw(GL_TRIANGLES, triangles)
       nil
+    end
+
+    def transform_points(points, transformation)
+      return false if transformation.nil?
+      points.each { |point| point.transform!(transformation) }
+      true
     end
 
     def offset_toward_camera(view, *args)
