@@ -8,7 +8,7 @@
 require "set"
 
 
-module TT::Plugins::SolidInspector
+module TT::Plugins::SolidInspector2
 
   require File.join(PATH, "gl_helper.rb")
 
@@ -337,4 +337,4 @@ module TT::Plugins::SolidInspector
 
   end # class
 
-end # module TT::Plugins::SolidInspector
+end # module TT::Plugins::SolidInspector2

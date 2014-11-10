@@ -6,7 +6,7 @@
 #-----------------------------------------------------------------------------
 
 
-module TT::Plugins::SolidInspector
+module TT::Plugins::SolidInspector2
 
   require File.join(PATH, "error_finder.rb")
   require File.join(PATH, "instance.rb")
@@ -166,4 +166,4 @@ module TT::Plugins::SolidInspector
     end
 
   end # class InspectorTool
-end # module TT::Plugins::SolidInspector
+end # module TT::Plugins::SolidInspector2

@@ -6,7 +6,7 @@
 #-------------------------------------------------------------------------------
 
 
-module TT::Plugins::SolidInspector
+module TT::Plugins::SolidInspector2
 
   require File.join(PATH, "inspector_tool.rb")
 
@@ -14,8 +14,8 @@ module TT::Plugins::SolidInspector
   ### MENU & TOOLBARS ### ------------------------------------------------------
 
   unless file_loaded?(__FILE__)
-    m = UI.menu('Tools')
-    m.add_item('Solid Inspector')  { self.inspect_solid }
+    menu = UI.menu("Tools")
+    menu.add_item(PLUGIN_NAME)  { self.inspect_solid }
 
     file_loaded(__FILE__)
   end
@@ -33,7 +33,7 @@ module TT::Plugins::SolidInspector
   # @note Debug method to reload the plugin.
   #
   # @example
-  #   TT::Plugins::SolidInspector.reload
+  #   TT::Plugins::SolidInspector2.reload
   #
   # @return [Integer] Number of files reloaded.
   def self.reload()
@@ -43,7 +43,7 @@ module TT::Plugins::SolidInspector
     load __FILE__
     # Supporting files
     if defined?(PATH) && File.exist?(PATH)
-      x = Dir.glob(File.join(PATH, '*.{rb,rbs}')).each { |file|
+      x = Dir.glob(File.join(PATH, "*.{rb,rbs}")).each { |file|
         load file
       }
       x.length + 1

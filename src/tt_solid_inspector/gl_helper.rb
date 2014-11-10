@@ -6,7 +6,7 @@
 #-------------------------------------------------------------------------------
 
 
-module TT::Plugins::SolidInspector
+module TT::Plugins::SolidInspector2
   module GL_Helper
 
     private
@@ -106,4 +106,4 @@ module TT::Plugins::SolidInspector
     end
 
   end # module GL_Helper
-end # module TT::Plugins::SolidInspector
+end # module TT::Plugins::SolidInspector2

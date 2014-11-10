@@ -6,7 +6,7 @@
 #-----------------------------------------------------------------------------
 
 
-module TT::Plugins::SolidInspector
+module TT::Plugins::SolidInspector2
   module Instance
 
     # Returns the definition for a +Group+, +ComponentInstance+ or +Image+
@@ -51,4 +51,4 @@ module TT::Plugins::SolidInspector
     end
 
   end # module Instance
-end # module TT::Plugins::SolidInspector
+end # module TT::Plugins::SolidInspector2
