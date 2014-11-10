@@ -10,15 +10,18 @@ module TT::Plugins::SolidInspector2
 
   require File.join(PATH, "error_finder.rb")
   require File.join(PATH, "instance.rb")
+  require File.join(PATH, "key_codes.rb")
 
 
   class InspectorTool
+
+    include KeyCodes
+
 
     def initialize
       puts "InspectorTool.initialize"
       @errors = []
       @current_error = 0
-      @groups = []
 
       model = Sketchup.active_model
       entities = model.active_entities
@@ -43,21 +46,26 @@ module TT::Plugins::SolidInspector2
       puts "> Instance Path: #{instance_path.inspect}"
       puts "> Transformation: #{transformation.to_a}"
       analyze(entities, instance_path, transformation)
+      nil
     end
+
 
     def activate
       Sketchup.active_model.active_view.invalidate
       update_ui
     end
 
+
     def deactivate(view)
       view.invalidate
     end
+
 
     def resume(view)
       view.invalidate
       update_ui
     end
+
 
     def onLButtonUp(flags, x, y, view)
       ph = view.pick_helper
@@ -68,36 +76,39 @@ module TT::Plugins::SolidInspector2
       view.invalidate
     end
 
+
     def onKeyUp(key, repeat, flags, view)
-      return if @groups.empty?
+      return if @errors.empty?
 
       shift = flags & CONSTRAIN_MODIFIER_MASK == CONSTRAIN_MODIFIER_MASK
 
       # Iterate over the error found using Tab, Up/Down, Left/Right.
       # Tab will zoom to the current error.
 
-      if key == 9 # Tab
+      if key == KEY_TAB
         if shift
-          @current_error = (@current_error - 1) % @groups.length
+          @current_error = (@current_error - 1) % @errors.size
         else
-          @current_error = (@current_error + 1) % @groups.length
+          @current_error = (@current_error + 1) % @errors.size
         end
       end
 
       if key == VK_UP || key == VK_RIGHT
-        @current_error = (@current_error + 1) % @groups.length
+        @current_error = (@current_error + 1) % @errors.size
       end
 
       if key == VK_DOWN || key == VK_LEFT
-        @current_error = (@current_error - 1) % @groups.length
+        @current_error = (@current_error - 1) % @errors.size
       end
 
-      if key == 13 || key == 9
+      if key == KEY_RETURN || key == KEY_TAB
         zoom_to_error(view)
       end
 
       view.invalidate
+      false # Returning true would cancel the key event.
     end
+
 
     def draw(view)
       @errors.each { |error|
@@ -106,7 +117,9 @@ module TT::Plugins::SolidInspector2
       nil
     end
 
+
     private
+
 
     def analyze(entities, instance_path, transformation)
       puts "analyse"
@@ -119,6 +132,7 @@ module TT::Plugins::SolidInspector2
       nil
     end
 
+
     def update_ui
       message = "Click on solids to inspect. Use arrow keys to cycle between "\
         "errors. Press Return to zoom to error. Press Tab/Shift+Tab to cycle "\
@@ -127,9 +141,10 @@ module TT::Plugins::SolidInspector2
       nil
     end
 
+
     def zoom_to_error(view)
-      entities = @groups[ @current_error ]
-      view.zoom(entities)
+      error = @errors[@current_error]
+      view.zoom(error.entity)
       # Adjust camera for the instance transformation
       camera = view.camera
       tr = @transformation

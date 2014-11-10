@@ -18,6 +18,7 @@ module TT::Plugins::SolidInspector2
 
     PIXEL_OFFSET = 1
 
+
     def draw_instance(view, instance, transformation = nil)
       points = boundingbox_segments(instance.bounds)
       transform_points(points, transformation)
@@ -27,6 +28,7 @@ module TT::Plugins::SolidInspector2
       nil
     end
 
+
     def draw_edge(view, edge, transformation = nil)
       points = offset_toward_camera(view, edge.vertices)
       transform_points(points, transformation)
@@ -35,6 +37,7 @@ module TT::Plugins::SolidInspector2
       view.draw(GL_LINES, points)
       nil
     end
+
 
     def draw_face(view, face, transformation = nil)
       mesh = face.mesh(POLYGON_MESH_POINTS)
@@ -52,11 +55,13 @@ module TT::Plugins::SolidInspector2
       nil
     end
 
+
     def transform_points(points, transformation)
       return false if transformation.nil?
       points.each { |point| point.transform!(transformation) }
       true
     end
+
 
     def offset_toward_camera(view, *args)
       if args.size > 1
@@ -71,6 +76,7 @@ module TT::Plugins::SolidInspector2
         point.offset(offset_direction, size)
       }
     end
+
 
     def boundingbox_segments(boundingbox)
       points = []
