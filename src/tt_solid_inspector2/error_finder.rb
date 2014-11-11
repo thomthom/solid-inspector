@@ -15,7 +15,7 @@ module TT::Plugins::SolidInspector2
 
   module ErrorFinder
 
-    def self.find_errors(entities)
+    def self.find_errors(entities, transformation)
       raise TypeError unless entities.is_a?(Sketchup::Entities)
 
       errors = []
@@ -62,7 +62,7 @@ module TT::Plugins::SolidInspector2
       if possible_internal_faces.size > 0
         # Determine which faces are internal.
         possible_internal_faces.each { |face|
-          if self.internal_face?(face)
+          if self.internal_face?(face, transformation)
             errors << InternalFace.new(face)
           end
         }
@@ -76,7 +76,7 @@ module TT::Plugins::SolidInspector2
       is_manifold = border_edges.empty? && possible_internal_faces.empty?
       if is_manifold
         possible_reversed_faces.each { |face|
-          if self.reversed_face?(face)
+          if self.reversed_face?(face, transformation)
             errors << ReversedFace.new(face)
           end
         }
@@ -89,28 +89,31 @@ module TT::Plugins::SolidInspector2
     end
 
 
-    def self.reversed_face?(face)
-      entities = face.parent
+    def self.reversed_face?(face, transformation)
+      entities = face.parent.entities
       centroid = self.centroid(face)
       # Shoot rays in the direction of the front side of the face. If we hit
       # odd number of intersections the face is facing "inward" in the manifold.
       ray = [centroid, face.normal]
+      ray = self.transform_ray(ray, transformation)
       intersections = self.count_ray_intersections(ray, entities)
       intersections % 2 > 0
     end
 
 
-    def self.internal_face?(face)
-      entities = face.parent
+    def self.internal_face?(face, transformation)
+      entities = face.parent.entities
       # TODO: Check if the centroid is over a hole? Maybe use the centroid of
       # one of the face's triangles?
       centroid = self.centroid(face)
       # Shoot rays in each direction of the face and count how many times it
       # intersect with the current entities set.
       ray = [centroid, face.normal]
+      ray = self.transform_ray(ray, transformation)
       intersections = self.count_ray_intersections(ray, entities)
 
       ray = [centroid, face.normal.reverse]
+      ray = self.transform_ray(ray, transformation)
       intersections += self.count_ray_intersections(ray, entities)
       # Even number of intersections indiate the face is internal.
       intersections % 2 == 0
@@ -118,14 +121,21 @@ module TT::Plugins::SolidInspector2
 
 
     def self.count_ray_intersections(ray, entities)
+      #Sketchup.active_model.active_entities.add_cpoint(ray.first)
       model = entities.model
-      result = model.raytest(ray, false)
       direction = ray[1]
+      result = model.raytest(ray, false)
       count = 0
-      until result.nil? || count > 100 # Temp safety limit.
-        # TODO: Check if the returned point hit within the instance.
-        count += 1
+      until result.nil?
+        raise "Safety Break!" if count > 100 # Temp safety limit.
         point, path = result
+        # Check if the returned point hit within the instance.
+        if path.last.parent.entities == entities
+          count += 1
+        end
+        #Sketchup.active_model.active_entities.add_cpoint(ray.first)
+        #Sketchup.active_model.active_entities.add_cpoint(point)
+        #Sketchup.active_model.active_entities.add_cline(ray.first, point)
         ray = [point, direction]
         result = model.raytest(ray, false)
       end
@@ -151,6 +161,11 @@ module TT::Plugins::SolidInspector2
       y /= num_points
       z /= num_points
       Geom::Point3d.new(x, y, z)
+    end
+
+
+    def self.transform_ray(ray, transformation)
+      ray.map { |x| x.transform(transformation) }
     end
 
   end # module

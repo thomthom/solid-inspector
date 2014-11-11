@@ -130,7 +130,7 @@ module TT::Plugins::SolidInspector2
       puts "> Transformation: #{transformation.to_a}"
 
       @current_error = 0
-      @errors = ErrorFinder.find_errors(entities)
+      @errors = ErrorFinder.find_errors(entities, transformation)
       puts "> Errors: #{@errors.size}"
       puts @errors.join("\n")
       @entities = entities
