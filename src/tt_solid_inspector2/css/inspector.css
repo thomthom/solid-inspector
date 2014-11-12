@@ -1,0 +1,30 @@
+/* Copyright 2014 Thomas Thomassen */
+
+.error-group {
+  background: #ddd;
+  border-bottom: 1px solid #999;
+  padding: 10px 110px 10px 50px;
+  position: relative;
+}
+
+.error-group .title {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.error-group .count {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  font-size: 50px;
+  font-weight: bold;
+}
+
+.error-group .description {
+}
+
+.error-group .fix {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}

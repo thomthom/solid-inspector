@@ -1,14 +1,15 @@
-#-----------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #
 # Thomas Thomassen
 # thomas[at]thomthom[dot]net
 #
-#-----------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 
 module TT::Plugins::SolidInspector2
 
   require File.join(PATH, "error_finder.rb")
+  require File.join(PATH, "inspector_window.rb")
   require File.join(PATH, "instance.rb")
   require File.join(PATH, "key_codes.rb")
 
@@ -21,12 +22,24 @@ module TT::Plugins::SolidInspector2
     def initialize
       @errors = []
       @current_error = 0
+      @window = nil
+      @deactivating = false
       analyze
       nil
     end
 
 
     def activate
+      @deactivating = false
+
+      @window = InspectorWindow.new
+      @window.set_on_close {
+        unless @deactivating
+          Sketchup.active_model.select_tool(nil)
+        end
+      }
+      @window.show
+
       Sketchup.active_model.active_view.invalidate
       update_ui
       nil
@@ -34,6 +47,10 @@ module TT::Plugins::SolidInspector2
 
 
     def deactivate(view)
+      if @window && @window.visible?
+        @deactivating = true
+        @window.close
+      end
       view.invalidate
       nil
     end
