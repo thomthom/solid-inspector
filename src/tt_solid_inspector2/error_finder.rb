@@ -45,8 +45,6 @@ module TT::Plugins::SolidInspector2
         elsif num_faces > 2
           # We don't know yet which of the edges are internal. We process these
           # later.
-          #possible_internal_faces.merge(edge.faces)
-          #has_internal_faces = true
           edges_with_internal_faces << edge
         end
       }
@@ -82,14 +80,17 @@ module TT::Plugins::SolidInspector2
           model = Sketchup.active_model
           model.start_operation("Find Internal Faces")
 
-          outer_front_color = Sketchup::Color.new(0, 255, 0)
-          outer_back_color = Sketchup::Color.new(0, 128, 0)
+          outer_front_material = model.materials.add("Outer Skin Front Face")
+          outer_front_material.color = Sketchup::Color.new(0, 255, 0)
 
-          reversed_outer_front_color = Sketchup::Color.new(0, 0, 255)
-          reversed_outer_back_color = Sketchup::Color.new(0, 0, 128)
+          outer_back_material = model.back_materials.add("Outer Skin Back Face")
+          outer_back_material.color = Sketchup::Color.new(0, 128, 0)
 
-          inner_front_color = Sketchup::Color.new(255, 0, 0)
-          inner_back_color = Sketchup::Color.new(128, 0, 0)
+          inner_front_material = model.materials.add("Inner Skin Front Face")
+          inner_front_material.color = Sketchup::Color.new(255, 0, 0)
+
+          inner_back_material = model.back_materials.add("Inner Skin Back Face")
+          inner_back_material.color = Sketchup::Color.new(128, 0, 0)
         end
 
         Sketchup.status_text = "Finding external faces by ray tracing..."
@@ -102,18 +103,18 @@ module TT::Plugins::SolidInspector2
         entities.grep(Sketchup::Face) { |face|
           if self.face_outward?(face, transformation, true)
             if debug
-              face.material = outer_front_color
-              face.back_material = outer_back_color
+              face.material = outer_front_material
+              face.back_material = outer_back_material
             end
             outer_faces << face
           elsif self.face_outward?(face, transformation, false)
             if debug
-              #face.material = reversed_outer_front_color
-              #face.back_material = reversed_outer_back_color
-              face.material = outer_front_color
-              face.back_material = outer_back_color
+              face.material = outer_front_material
+              face.back_material = outer_back_material
             end
             outer_faces << face
+            errors << ReversedFace.new(face)
+            possible_reversed_faces.delete(face)
           else
             possible_internal_faces << face
           end
@@ -133,8 +134,8 @@ module TT::Plugins::SolidInspector2
           }
           if is_internal
             if debug
-              face.material = inner_front_color
-              face.back_material = inner_back_color
+              face.material = inner_front_material
+              face.back_material = inner_back_material
             end
             errors << InternalFace.new(face)
             possible_internal_faces.delete(face)
