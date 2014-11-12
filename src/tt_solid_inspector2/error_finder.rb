@@ -64,8 +64,6 @@ module TT::Plugins::SolidInspector2
         }
       end
 
-      # TODO: Can only test this if the mesh has no holes.
-      #if possible_internal_faces.size > 0
       if edges_with_internal_faces.size > 0 && border_edges.size > 0
         # Cannot determine what faces are internal until all holes in the mesh
         # is closed.
@@ -218,7 +216,6 @@ module TT::Plugins::SolidInspector2
       # are oriented consistently.
       # Stray edges are ignored from this because they won't interfere with the
       # surface detection.
-      #is_manifold = border_edges.empty? && possible_internal_faces.empty?
       is_manifold = border_edges.empty? && edges_with_internal_faces.empty?
       if is_manifold
         possible_reversed_faces.each { |face|
@@ -258,25 +255,6 @@ module TT::Plugins::SolidInspector2
       ray = [point_on_face, direction]
       ray = self.transform_ray(ray, transformation)
       !self.hit_entities?(ray, entities)
-    end
-
-
-    def self.internal_face?(face, transformation)
-      entities = face.parent.entities
-      # TODO: Check if the centroid is over a hole? Maybe use the centroid of
-      # one of the face's triangles?
-      point_on_face = self.point_on_face(face)
-      # Shoot rays in each direction of the face and count how many times it
-      # intersect with the current entities set.
-      ray = [point_on_face, face.normal]
-      ray = self.transform_ray(ray, transformation)
-      intersections = self.count_ray_intersections(ray, entities)
-
-      ray = [point_on_face, face.normal.reverse]
-      ray = self.transform_ray(ray, transformation)
-      intersections += self.count_ray_intersections(ray, entities)
-      # Even number of intersections indiate the face is internal.
-      intersections % 2 == 0
     end
 
 
@@ -323,12 +301,6 @@ module TT::Plugins::SolidInspector2
         result = model.raytest(ray, false)
       end
       false
-    end
-
-
-    def self.centroid(face)
-      points = face.vertices.map { |vertex| vertex.position }
-      self.average(points)
     end
 
 
