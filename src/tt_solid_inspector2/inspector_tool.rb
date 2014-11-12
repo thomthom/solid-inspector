@@ -131,11 +131,20 @@ module TT::Plugins::SolidInspector2
 
       @current_error = 0
       @errors = ErrorFinder.find_errors(entities, transformation)
-      puts "> Errors: #{@errors.size}"
-      #puts @errors.join("\n")
       @entities = entities
       @instance_path = instance_path
       @transformation = transformation
+
+      puts "> Errors: #{@errors.size}"
+      #puts @errors.join("\n")
+      error_types = {}
+      @errors.each { |error|
+        error_types[error.class] ||= 0
+        error_types[error.class] += 1
+      }
+      error_types.each { |klass, num_errors|
+        puts "  > #{klass.name}: #{num_errors}"
+      }
       nil
     end
 

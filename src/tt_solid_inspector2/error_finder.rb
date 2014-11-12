@@ -68,7 +68,14 @@ module TT::Plugins::SolidInspector2
 
       # TODO: Can only test this if the mesh has no holes.
       #if possible_internal_faces.size > 0
-      if edges_with_internal_faces.size > 0
+      if edges_with_internal_faces.size > 0 && border_edges.size > 0
+        # Cannot determine what faces are internal until all holes in the mesh
+        # is closed.
+        edges_with_internal_faces.each { |edge|
+          errors << InternalFaceEdge.new(edge)
+        }
+      elsif edges_with_internal_faces.size > 0
+
         # Determine which faces are internal.
 
         if debug
@@ -147,7 +154,7 @@ module TT::Plugins::SolidInspector2
 
           Sketchup.status_text = "Refining search for internal faces (#{i})..."
 
-          puts "Refine: #{i}"
+          puts "> Refine: #{i}"
           if debug
             material = entities.model.materials.add("RefineFront")
             back_material = entities.model.materials.add("RefineBack")
@@ -178,8 +185,8 @@ module TT::Plugins::SolidInspector2
         end
 
         if debug && materials.size > 1
-          puts "Adjusting refinement colors..."
-          puts "> #{materials.size}"
+          puts "> Adjusting refinement colors..."
+          puts "  > #{materials.size}"
 
           front_color_step = 192.0 / materials.size
           back_color_step = 128.0 / materials.size
@@ -455,6 +462,19 @@ module TT::Plugins::SolidInspector2
       @fixed = true
       true
     end
+
+    def draw(view, transformation = nil)
+      view.drawing_color = ERROR_COLOR_EDGE
+      draw_edge(view, @entity, transformation)
+      nil
+    end
+
+  end # class
+
+
+  # This class is used to mark edges connected to internal faces when the mesh
+  # has holes which prevent the inner face detection from working reliably.
+  class InternalFaceEdge < SolidError
 
     def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_EDGE
