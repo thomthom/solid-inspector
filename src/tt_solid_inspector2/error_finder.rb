@@ -97,7 +97,6 @@ module TT::Plugins::SolidInspector2
         # internal.
         start_time = Time.new
         outer_faces = Set.new
-        possible_internal_faces.clear
         entities.grep(Sketchup::Face) { |face|
           if self.face_outward?(face, transformation, true)
             if debug
