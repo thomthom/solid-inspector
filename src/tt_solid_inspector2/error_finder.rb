@@ -217,6 +217,9 @@ module TT::Plugins::SolidInspector2
       # surface detection.
       is_manifold = border_edges.empty? && edges_with_internal_faces.empty?
       if is_manifold
+
+        Sketchup.status_text = "Analyzing face normals..."
+
         possible_reversed_faces.each { |face|
           if self.reversed_face?(face, transformation)
             errors << ReversedFace.new(face)
@@ -226,6 +229,8 @@ module TT::Plugins::SolidInspector2
         # "inward" and they might all need to be reversed. Take one face and
         # check if it's facing "outward" - if it doesn't, reverse all the faces.
       end
+
+      Sketchup.status_text = ""
 
       errors
     end
@@ -339,31 +344,43 @@ module TT::Plugins::SolidInspector2
 
     include GL_Helper
 
+    def self.display_name
+      self.name
+    end
+
+    def self.description
+      ""
+    end
+
     attr_accessor :entity
 
     def initialize(entity)
       @entity = entity
       @fixed = false
-      @erase_to_fix = false
     end
 
     def fix
-      if @erase_to_fix
-        return false if @entity.deleted?
-        @entity.erase!
-        @fixed = true
-        true
-      else
-        raise NotImplementedError
-      end
+      raise NotImplementedError
     end
 
     def fixed?
       @fixed ? true : false
     end
 
+    def fixable?
+      is_a?(Fixable)
+    end
+
     def draw(view, transformation = nil)
       raise NotImplementedError
+    end
+
+    def to_json(*args)
+      data = {
+        :id         => object_id,
+        :is_fixable => fixable?
+      }
+      data.to_json(*args)
     end
 
   end # class
@@ -390,14 +407,22 @@ module TT::Plugins::SolidInspector2
   # end
 
 
+  module Fixable
+  end # module
+
+
   # Mix-in module to mark that an erro can be fixed by erasing the entity.
   # The purpose of this is to be able to perform a bulk erase operation which
   # is much faster than calling .erase! on each entity.
   module EraseToFix
 
-    def initialize(*args)
-      super
-      @erase_to_fix = true
+    include Fixable
+
+    def fix
+      return false if @entity.deleted?
+      @entity.erase!
+      @fixed = true
+      true
     end
 
   end # module
@@ -407,6 +432,16 @@ module TT::Plugins::SolidInspector2
   # loop. It could be part of a stray face, border of a non-manifold surface or
   # part of a complex hole that needs multiple faces to heal.
   class BorderEdge < SolidError
+
+    def self.display_name
+      "Border Edges"
+    end
+
+    def self.description
+      "Border edges are connected to only one face and therefore doesn't form "\
+      "a manifold. These cannot be fixed automatically and must be fixed by "\
+      "hand."
+    end
 
     def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_EDGE
@@ -422,6 +457,15 @@ module TT::Plugins::SolidInspector2
   class HoleEdge < SolidError
 
     include EraseToFix
+
+    def self.display_name
+      "Hole Edges"
+    end
+
+    def self.description
+      "Hole edges are edges forming a hole within a face. These can be fixed "\
+      "automatically by removing the hole all together."
+    end
 
     def fix
       return false if @entity.deleted?
@@ -448,6 +492,17 @@ module TT::Plugins::SolidInspector2
   # has holes which prevent the inner face detection from working reliably.
   class InternalFaceEdge < SolidError
 
+    def self.display_name
+      "Internal Face Edges"
+    end
+
+    def self.description
+      "Internal face edges are edges connected to internal faces. However, "\
+      "if there are holes in the mesh it is not possible to reliably "\
+      "determine which faces are internal. Fix the holes in the mesh and then "\
+      "run the tool again."
+    end
+
     def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_EDGE
       draw_edge(view, @entity, transformation)
@@ -462,6 +517,15 @@ module TT::Plugins::SolidInspector2
 
     include EraseToFix
 
+    def self.display_name
+      "Internal Faces"
+    end
+
+    def self.description
+      "Internal faces are faces located on the inside of a mesh that should "\
+      "be a solid. These can be automatically fixed by erasing them."
+    end
+
     def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_FACE
       draw_face(view, @entity, transformation)
@@ -475,6 +539,19 @@ module TT::Plugins::SolidInspector2
   # The face is not oriented consistently with the rest of the surface of the
   # manifold. It is facing "inwards" and should be reversed.
   class ReversedFace < SolidError
+
+    include Fixable
+
+    def self.display_name
+      "Reversed Faces"
+    end
+
+    def self.description
+      "Many applications will not be able to treat a mesh as a solid if the "\
+      "face normal (direciton) isn't all uniform. The front side of a face "\
+      "must be facing outwards. These can be fixed automatically by reversing "\
+      "the faces."
+    end
 
     def fix
       return false if @entity.deleted?
@@ -497,6 +574,15 @@ module TT::Plugins::SolidInspector2
 
     include EraseToFix
 
+    def self.display_name
+      "Stray Edges"
+    end
+
+    def self.description
+      "Stray edges are not connected to any faces and doesn't form any part "\
+      "of solids. These can automatically fixed by erasing them."
+    end
+
     def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_EDGE
       draw_edge(view, @entity, transformation)
@@ -510,6 +596,10 @@ module TT::Plugins::SolidInspector2
   # Maybe it shouldn't "fix" by exploding but instead yield a message to why
   # SketchUp's Enity Info dialog doesn't say "Solid".
   class NestedInstance < SolidError
+
+    def self.display_name
+      "Nested Instances"
+    end
 
     def fix
       return false if @entity.deleted?

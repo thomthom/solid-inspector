@@ -24,19 +24,25 @@ module TT::Plugins::SolidInspector2
       @current_error = 0
       @window = nil
       @deactivating = false
-      analyze
       nil
     end
 
 
     def activate
       @deactivating = false
+      #analyze
 
       @window = InspectorWindow.new
       @window.set_on_close {
         unless @deactivating
           Sketchup.active_model.select_tool(nil)
         end
+      }
+      @window.on("html_ready") { |dialog|
+        #grouped_errors = group_errors(@errors)
+        #puts JSON.pretty_generate(grouped_errors)
+        #dialog.call("list_errors", grouped_errors)
+        analyze
       }
       @window.show
 
@@ -162,7 +168,28 @@ module TT::Plugins::SolidInspector2
       error_types.each { |klass, num_errors|
         puts "  > #{klass.name}: #{num_errors}"
       }
+
+      # Push results to webdialog.
+      grouped_errors = group_errors(@errors)
+      #puts JSON.pretty_generate(grouped_errors)
+      @window.call("list_errors", grouped_errors)
       nil
+    end
+
+
+    def group_errors(errors)
+      groups = {}
+      errors.each { |error|
+        unless groups.key?(error.class)
+          groups[error.class] = {
+            :name        => error.class.display_name,
+            :description => error.class.description,
+            :errors      => []
+          }
+        end
+        groups[error.class][:errors] << error
+      }
+      groups
     end
 
 
