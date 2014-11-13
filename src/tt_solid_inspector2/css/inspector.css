@@ -30,9 +30,11 @@
 }
 
 .error-group .expand_info {
+  display: inline-block;
   position: absolute;
   top: 10px;
   right: 110px;
+  z-index: 25;
   text-decoration: none;
   font-weight: bold;
   padding: 5px;
@@ -43,7 +45,7 @@
   position: absolute;
   left: 10px;
   right: 110px;
-  z-index: 20;
+  z-index: 40;
   color: #fff;
   background: rgba(0, 0, 0, 0.8);
   padding: 10px;

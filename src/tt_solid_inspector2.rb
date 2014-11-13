@@ -17,6 +17,7 @@ module TT
   ### CONSTANTS ### ------------------------------------------------------------
 
   # Plugin information
+  PLUGIN          = self
   PLUGIN_ID       = "TT_SolidInspector2".freeze
   PLUGIN_NAME     = "Solid Inspector²".freeze
   PLUGIN_VERSION  = "2.0.0".freeze

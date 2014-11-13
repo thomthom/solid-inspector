@@ -4,13 +4,20 @@
 $(document).ready(function() {
 
   $("#fix-all").on("click", function() {
-    //callback("close_window");
-    alert("TODO");
+    callback("fix_all");
   });
 
   $(document).on("click", ".error-group .expand_info", function() {
     var $this = $(this);
     $this.siblings(".description").toggle();
+  });
+
+  $(document).on("click", ".error-group > .fix", function() {
+    var $this = $(this);
+    var $error_group = $this.parent();
+    var type = $error_group.data("type");
+    var data = { "type" : type }
+    callback("fix_group", data);
   });
 });
 
@@ -34,5 +41,6 @@ function add_error_type(error_group) {
     <button class="fix">Fix</button>\
   </div>';
   var $group = $(html);
+  $group.data("type", error_group.type)
   $("#content").append($group);
 }

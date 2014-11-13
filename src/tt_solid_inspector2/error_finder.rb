@@ -18,6 +18,8 @@ module TT::Plugins::SolidInspector2
     def self.find_errors(entities, transformation, debug = false)
       raise TypeError unless entities.is_a?(Sketchup::Entities)
 
+      # TODO: Separate entities in group of them being connected to each other.
+
       errors = []
       border_edges = Set.new
       possible_internal_faces = Set.new
@@ -221,6 +223,8 @@ module TT::Plugins::SolidInspector2
         Sketchup.status_text = "Analyzing face normals..."
 
         possible_reversed_faces.each { |face|
+          # TODO: Smarter detection of reversed faces when multiple reversed
+          # faces are connected.
           if self.reversed_face?(face, transformation)
             errors << ReversedFace.new(face)
           end
@@ -343,6 +347,10 @@ module TT::Plugins::SolidInspector2
     ERROR_COLOR_FACE = Sketchup::Color.new(255, 0, 0, 128).freeze
 
     include GL_Helper
+
+    def self.type_name
+      self.name.split("::").last
+    end
 
     def self.display_name
       self.name
