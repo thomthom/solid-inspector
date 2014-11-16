@@ -54,17 +54,29 @@ module TT::Plugins::SolidInspector2
       Sketchup.status_text = "Analyzing edges..."
 
       if border_edges.size > 0
+        mesh_border_edges = []
+        hole_edges = []
+
         border_edges.each { |edge|
           face = edge.faces.first
           if face.outer_loop.edges.include?(edge)
-            # Face part of mesh border.
-            # TODO: Sort edges by the border they belong to.
-            errors << BorderEdge.new(edge)
+            mesh_border_edges << edge
           else
-            errors << HoleEdge.new(edge)
+            hole_edges << edge
           end
         }
+
+        Sketchup.status_text = "Sorting surface borders..."
+        self.group_connected_edges(mesh_border_edges).each { |edges|
+          errors << SurfaceBorder.new(edges)
+        }
+
+        Sketchup.status_text = "Sorting face holes..."
+        self.group_connected_edges(hole_edges).each { |edges|
+          errors << FaceHole.new(edges)
+        }
       end
+
 
       if edges_with_internal_faces.size > 0 && border_edges.size > 0
         # Cannot determine what faces are internal until all holes in the mesh
@@ -338,6 +350,33 @@ module TT::Plugins::SolidInspector2
       ray.map { |x| x.transform(transformation) }
     end
 
+
+    def self.group_connected_edges(edges)
+      # Group connected error-edges.
+      groups = []
+      stack = edges.clone
+      until stack.empty?
+        cluster = []
+        cluster << stack.shift
+
+        # Find connected errors
+        edge = cluster.first
+        haystack = ([edge.start.edges + edge.end.edges] - [edge]).first & stack
+        until haystack.empty?
+          e = haystack.shift
+
+          if stack.include?( e )
+            cluster << e
+            stack.delete( e )
+            haystack += ([e.start.edges + e.end.edges] - [e]).first & stack
+          end
+        end
+
+        groups << cluster
+      end
+      groups
+    end
+
   end # module
 
 
@@ -360,10 +399,15 @@ module TT::Plugins::SolidInspector2
       ""
     end
 
-    attr_accessor :entity
+    attr_accessor :entities
 
-    def initialize(entity)
-      @entity = entity
+    def initialize(entities)
+      raise TypeError if entities.nil?
+      if entities.is_a?(Enumerable)
+        @entities = entities.clone
+      else
+        @entities = [entities]
+      end
       @fixed = false
     end
 
@@ -427,8 +471,10 @@ module TT::Plugins::SolidInspector2
     include Fixable
 
     def fix
-      return false if @entity.deleted?
-      @entity.erase!
+      entity = @entities.find { |entity| entity.valid? }
+      return false if entity.nil?
+      entities = entity.parent.entities
+      entities.erase_entities(@entities)
       @fixed = true
       true
     end
@@ -453,7 +499,7 @@ module TT::Plugins::SolidInspector2
 
     def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_EDGE
-      draw_edge(view, @entity, transformation)
+      draw_edge(view, @entities[0], transformation)
       nil
     end
 
@@ -476,12 +522,12 @@ module TT::Plugins::SolidInspector2
     end
 
     def fix
-      return false if @entity.deleted?
+      return false if @entities[0].deleted?
       # Find all the edges for the inner loop the edge is part of and erase all
       # of them.
-      entities = @entity.parent
-      face = @entity.faces.first
-      edge_loop = face.loops.find { |loop| loop.edges.include?(@entity) }
+      entities = @entities[0].parent
+      face = @entities[0].faces.first
+      edge_loop = face.loops.find { |loop| loop.edges.include?(@entities[0]) }
       entities.erase_entities(edge_loop.edges)
       @fixed = true
       true
@@ -489,7 +535,7 @@ module TT::Plugins::SolidInspector2
 
     def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_EDGE
-      draw_edge(view, @entity, transformation)
+      draw_edge(view, @entities[0], transformation)
       nil
     end
 
@@ -513,7 +559,7 @@ module TT::Plugins::SolidInspector2
 
     def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_EDGE
-      draw_edge(view, @entity, transformation)
+      draw_edge(view, @entities[0], transformation)
       nil
     end
 
@@ -536,7 +582,7 @@ module TT::Plugins::SolidInspector2
 
     def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_FACE
-      draw_face(view, @entity, transformation)
+      draw_face(view, @entities[0], transformation)
       # TODO: Draw edges? Maybe in 2d to ensure the face is seen?
       nil
     end
@@ -562,15 +608,15 @@ module TT::Plugins::SolidInspector2
     end
 
     def fix
-      return false if @entity.deleted?
-      @entity.reverse!
+      return false if @entities[0].deleted?
+      @entities[0].reverse!
       @fixed = true
       true
     end
 
     def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_FACE
-      draw_face(view, @entity, transformation)
+      draw_face(view, @entities[0], transformation)
       nil
     end
 
@@ -593,7 +639,53 @@ module TT::Plugins::SolidInspector2
 
     def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_EDGE
-      draw_edge(view, @entity, transformation)
+      draw_edge(view, @entities[0], transformation)
+      nil
+    end
+
+  end # class
+
+
+  # Edges that form the border of a surface or a hole in the mesh.
+  class SurfaceBorder < SolidError
+
+    def self.display_name
+      "Surface Borders"
+    end
+
+    def self.description
+      "Edges that form the border of a surface or a hole in the mesh."
+    end
+
+    def draw(view, transformation = nil)
+      view.drawing_color = ERROR_COLOR_EDGE
+      @entities.each { |edge|
+        draw_edge(view, edge, transformation)
+      }
+      nil
+    end
+
+  end # class
+
+
+  # Edges that form the a hole in a face.
+  class FaceHole < SolidError
+
+    include EraseToFix
+
+    def self.display_name
+      "Face Holes"
+    end
+
+    def self.description
+      "Edges that form the a hole in a face."
+    end
+
+    def draw(view, transformation = nil)
+      view.drawing_color = ERROR_COLOR_EDGE
+      @entities.each { |edge|
+        draw_edge(view, edge, transformation)
+      }
       nil
     end
 
@@ -610,15 +702,15 @@ module TT::Plugins::SolidInspector2
     end
 
     def fix
-      return false if @entity.deleted?
-      @entity.explode
+      return false if @entities[0].deleted?
+      @entities[0].explode
       @fixed = true
       true
     end
 
     def draw(view, transformation = nil)
       view.drawing_color = ERROR_COLOR_EDGE
-      draw_instance(view, @entity, transformation)
+      draw_instance(view, @entities[0], transformation)
       nil
     end
 

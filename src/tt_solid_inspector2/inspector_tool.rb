@@ -170,7 +170,7 @@ module TT::Plugins::SolidInspector2
         if error.is_a?(EraseToFix)
           # We want to collect all the entities that can be erased and erase
           # them in one bulk operation for performance gain.
-          entities_to_be_erased << error.entity
+          entities_to_be_erased.merge(error.entities)
         else
           # All the others will be fixed one by one after erasing entities.
           remaining_errors << error
@@ -281,7 +281,7 @@ module TT::Plugins::SolidInspector2
 
     def zoom_to_error(view)
       error = @errors[@current_error]
-      view.zoom(error.entity)
+      view.zoom(error.entities)
       # Adjust camera for the instance transformation
       camera = view.camera
       tr = @transformation
