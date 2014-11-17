@@ -229,21 +229,33 @@ module TT::Plugins::SolidInspector2
       # are oriented consistently.
       # Stray edges are ignored from this because they won't interfere with the
       # surface detection.
+      #
+      # TODO(thomthom): When there are no border edges, perform this check by
+      # ignoring the faces marked as internal.
       is_manifold = border_edges.empty? && edges_with_internal_faces.empty?
       if is_manifold
 
         Sketchup.status_text = "Analyzing face normals..."
 
-        possible_reversed_faces.each { |face|
-          # TODO: Smarter detection of reversed faces when multiple reversed
-          # faces are connected.
+        processed = Set.new()
+        stack = possible_reversed_faces.to_a
+        i = 0
+        until stack.empty?
+          face = stack.shift
+          next if processed.include?(face)
           if self.reversed_face?(face, transformation)
             errors << SolidErrors::ReversedFace.new(face)
+            faces = face.edges.map { |edge| edge.faces }
+            faces.flatten!
+            faces.reject! { |f|
+              processed.include?(f) || possible_reversed_faces.include?(f)
+            }
+            processed << face
+            stack.concat(faces)
           end
-        }
-        # TODO: Take into account that all faces could be consistently faced
-        # "inward" and they might all need to be reversed. Take one face and
-        # check if it's facing "outward" - if it doesn't, reverse all the faces.
+          i += 1
+          raise "Safety Break!" if i > 1000 # Temp safety limit.
+        end
       end
 
       Sketchup.status_text = ""
