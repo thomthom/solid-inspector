@@ -161,59 +161,6 @@ module TT::Plugins::SolidInspector2
     end
 
 
-    def bulk_fix(errors)
-      # For performance reasons we sort out the different errors and handle them
-      # differently depending on their traits.
-      entities_to_be_erased = Set.new
-      remaining_errors = []
-      errors.each { |error|
-        if error.is_a?(EraseToFix)
-          # We want to collect all the entities that can be erased and erase
-          # them in one bulk operation for performance gain.
-          entities_to_be_erased.merge(error.entities)
-        else
-          # All the others will be fixed one by one after erasing entities.
-          remaining_errors << error
-        end
-      }
-
-      # We want to erase the edges that are separating faces that are being
-      # erased. Otherwise the operation leaves stray edges behind.
-      stray_edges = Set.new
-      entities_to_be_erased.grep(Sketchup::Face) { |face|
-        face.edges.each { |edge|
-          if edge.faces.all? { |f| entities_to_be_erased.include?(f) }
-            stray_edges << edge
-          end
-        }
-      }
-      entities_to_be_erased.merge(stray_edges)
-
-      # For extra safety we validate the entities.
-      entities_to_be_erased.reject! { |entity| entity.deleted? }
-
-      # Now we're ready to perform the cleanup operations.
-      model = @entities.model
-      begin
-        model.start_operation("Fix Solid", true)
-        @entities.erase_entities(entities_to_be_erased.to_a)
-        remaining_errors.each { |error|
-          begin
-            error.fix
-          rescue NotImplementedError => e
-            p e
-          end
-        }
-        model.commit_operation
-      rescue
-        #model.abort_operation
-        model.commit_operation
-        raise
-      end
-      nil
-    end
-
-
     def create_window
       window = InspectorWindow.new
       window.set_on_close {
@@ -238,17 +185,17 @@ module TT::Plugins::SolidInspector2
 
 
     def fix_all
-      bulk_fix(@errors)
+      ErrorFinder.fix_errors(@errors, @entities)
       analyze
     end
 
 
     def fix_group(type)
-      error_klass = PLUGIN.const_get(type)
+      error_klass = SolidErrors.const_get(type)
       errors = @errors.select { |error|
         error.is_a?(error_klass)
       }
-      bulk_fix(errors)
+      ErrorFinder.fix_errors(errors, @entities)
       analyze
     end
 
