@@ -33,10 +33,12 @@ if defined?( TT::Lib ) && TT::Lib.compatible?( '2.7.0', 'Solid Inspector' )
 module TT::Plugins::SolidInspector 
   
   ### MENU & TOOLBARS ### ------------------------------------------------------
-  
-  unless file_loaded?( File.basename(__FILE__) )
+
+  unless file_loaded?( __FILE__ )
     m = TT.menu( 'Tools' )
     m.add_item( 'Solid Inspector' )  { self.inspect_solid }
+
+    file_loaded( __FILE__ )
   end
   
   
@@ -255,9 +257,3 @@ module TT::Plugins::SolidInspector
 end # module
 
 end # if TT_Lib
-
-#-------------------------------------------------------------------------------
-
-file_loaded( __FILE__ )
-
-#-------------------------------------------------------------------------------
