@@ -103,6 +103,9 @@ module TT::Plugins::SolidInspector2
 
           inner_back_material = model.materials.add("Inner Skin Back Face")
           inner_back_material.color = Sketchup::Color.new(128, 0, 0)
+
+          possible_inner_face_material = model.materials.add("Possible Inner Face")
+          possible_inner_face_material.color = Sketchup::Color.new(128, 255, 0)
         end
 
         Sketchup.status_text = "Finding external faces by ray tracing..."
@@ -127,10 +130,10 @@ module TT::Plugins::SolidInspector2
             errors << SolidErrors::ReversedFace.new(face)
             possible_reversed_faces.delete(face)
           else
-
-            face.material = "Purple" if debug
-            face.back_material = face.material if debug
-
+            if debug
+              face.material = possible_inner_face_material
+              face.back_material = possible_inner_face_material
+            end
             possible_internal_faces << face
           end
         }
@@ -188,24 +191,26 @@ module TT::Plugins::SolidInspector2
           # edges have faces that all are marked for removal this face should be
           # also marked for removal.
           possible_internal_faces.to_a.each { |face|
-
+            # Look for neighboring faces that are known to be outer faces.
             outer_neighbours = face.edges.select { |edge|
               edge.faces.any? { |f| outer_faces.include?(f) }
             }
+            # Short-circuit unless there is more than one face.
+            next if outer_neighbours.size < 2
 
-            inner_neighbours = face.edges.select { |edge|
+            # Check if any of the edges are connected exclusively to faces that
+            # are marked for deletion.
+            has_inner_neighbours = face.edges.any? { |edge|
               edge.faces.all? { |f| f == face || internal_faces.include?(f) }
             }
-
-            if outer_neighbours.size > 1 && inner_neighbours.empty?
-              if debug #&& false # Reversed faces refinements
+            # If we found any it would be part of an internal surface and should
+            # also be erased. If not, then it's an outer skin face and should be
+            # preserved.
+            if outer_neighbours.size > 1 && !has_inner_neighbours
+              if
                 face.material = material
                 face.back_material = back_material
               end
-
-              face.material = Sketchup::Color.new(0, 92, 0) if debug
-              face.back_material = face.material if debug
-
               new_outer << face
             end
           }
