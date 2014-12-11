@@ -25,6 +25,8 @@ module TT::Plugins::SolidInspector2
       possible_internal_faces = Set.new
       possible_reversed_faces = Set.new
       edges_with_internal_faces = Set.new
+      internal_faces = Set.new
+      reversed_faces = Set.new
 
       Sketchup.status_text = "Inspecting edges..."
 
@@ -128,6 +130,7 @@ module TT::Plugins::SolidInspector2
             end
             outer_faces << face
             errors << SolidErrors::ReversedFace.new(face)
+            reversed_faces << face
             possible_reversed_faces.delete(face)
           else
             if debug
@@ -141,8 +144,6 @@ module TT::Plugins::SolidInspector2
         puts "> Ray tracing took: #{elapsed_time}s"
 
         Sketchup.status_text = "Finding internal faces..."
-
-        internal_faces = Set.new
 
         # Find faces that we know for sure must be internal.
         possible_internal_faces.to_a.each { |face|
@@ -245,6 +246,7 @@ module TT::Plugins::SolidInspector2
         end
 
         # The remaining faces should all be internal faces.
+        internal_faces.merge(possible_internal_faces)
         possible_internal_faces.each { |face|
           errors << SolidErrors::InternalFace.new(face)
         }
@@ -259,9 +261,19 @@ module TT::Plugins::SolidInspector2
       # TODO(thomthom): When there are no border edges, perform this check by
       # ignoring the faces marked as internal.
       is_manifold = border_edges.empty? && edges_with_internal_faces.empty?
-      if is_manifold
+      #if is_manifold
+      if border_edges.empty?
 
+        puts "Analyzing face normals..."
         Sketchup.status_text = "Analyzing face normals..."
+
+        # The set of faces representing the outer skin.
+        entity_set = Set.new(entities.grep(Sketchup::Face))
+        entity_set.subtract(internal_faces)
+        #entity_set.each { |face|
+        #  face.material = Sketchup::Color.new(0, 128, 0)
+        #  face.back_material = Sketchup::Color.new(0, 64, 0)
+        #}
 
         processed = Set.new()
         stack = possible_reversed_faces.to_a
@@ -269,20 +281,27 @@ module TT::Plugins::SolidInspector2
         until stack.empty?
           face = stack.shift
           next if processed.include?(face)
-          if self.reversed_face?(face, transformation)
+          if self.reversed_face?(face, transformation, entity_set)
             errors << SolidErrors::ReversedFace.new(face)
+            reversed_faces << face
             faces = face.edges.map { |edge| edge.faces }
             faces.flatten!
             faces.reject! { |f|
-              processed.include?(f) || possible_reversed_faces.include?(f)
+              processed.include?(f) ||
+              possible_reversed_faces.include?(f) ||
+              reversed_faces.include?(f)
             }
             processed << face
             stack.concat(faces)
           end
           i += 1
-          raise "Safety Break!" if i > 1000 # Temp safety limit.
+          raise "Safety Break!" if i > 10000 # Temp safety limit.
         end
       end
+
+      #internal_errors = errors.grep(SolidErrors::ReversedFace)
+      #internal_set = Set.new(internal_errors.map { |x| x.entities }.flatten)
+      #puts "#{internal_errors.size} vs #{internal_set.size}"
 
       Sketchup.status_text = ""
 
@@ -343,14 +362,14 @@ module TT::Plugins::SolidInspector2
     end
 
 
-    def self.reversed_face?(face, transformation)
+    def self.reversed_face?(face, transformation, entity_set = [])
       entities = face.parent.entities
       point_on_face = self.point_on_face(face)
       # Shoot rays in the direction of the front side of the face. If we hit
       # odd number of intersections the face is facing "inward" in the manifold.
       ray = [point_on_face, face.normal]
       ray = self.transform_ray(ray, transformation)
-      intersections = self.count_ray_intersections(ray, entities)
+      intersections = self.count_ray_intersections(ray, entities, entity_set)
       intersections % 2 > 0
     end
 
@@ -369,9 +388,10 @@ module TT::Plugins::SolidInspector2
     end
 
 
-    def self.count_ray_intersections(ray, entities)
+    def self.count_ray_intersections(ray, entities, entity_set = [])
       #Sketchup.active_model.active_entities.add_cpoint(ray.first)
       model = entities.model
+      entity_set = entities.to_a if entity_set.empty?
       direction = ray[1]
       result = model.raytest(ray, false)
       count = 0
@@ -380,7 +400,9 @@ module TT::Plugins::SolidInspector2
         point, path = result
         # Check if the returned point hit within the instance.
         if path.last.parent.entities == entities
-          count += 1
+          if entity_set.include?(path.last)
+            count += 1
+          end
         end
         #Sketchup.active_model.active_entities.add_cpoint(ray.first)
         #Sketchup.active_model.active_entities.add_cpoint(point)
@@ -416,9 +438,20 @@ module TT::Plugins::SolidInspector2
 
 
     def self.point_on_face(face)
+      invalid = Sketchup::Face::PointOnVertex | Sketchup::Face::PointOnEdge
       mesh = face.mesh(0) # TODO: Constant
-      points = mesh.polygon_points_at(1)
-      self.average(points)
+      (1..mesh.count_polygons).each { |i|
+        points = mesh.polygon_points_at(i)
+        point = self.average(points)
+        # Make sure the point is not on the border of the face - as that can
+        # lead to false positives.
+        classification = face.classify_point(point)
+        if classification & invalid == 0
+          return point
+        end
+      }
+      warn "Degenerate face!"
+      mesh.polygon_points_at(1)
     end
 
 
