@@ -289,7 +289,8 @@ module TT::Plugins::SolidInspector2
             faces.reject! { |f|
               processed.include?(f) ||
               possible_reversed_faces.include?(f) ||
-              reversed_faces.include?(f)
+              reversed_faces.include?(f) ||
+              internal_faces.include?(f)
             }
             processed << face
             stack.concat(faces)
