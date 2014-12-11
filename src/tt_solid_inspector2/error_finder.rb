@@ -95,13 +95,13 @@ module TT::Plugins::SolidInspector2
           outer_front_material = model.materials.add("Outer Skin Front Face")
           outer_front_material.color = Sketchup::Color.new(0, 255, 0)
 
-          outer_back_material = model.back_materials.add("Outer Skin Back Face")
+          outer_back_material = model.materials.add("Outer Skin Back Face")
           outer_back_material.color = Sketchup::Color.new(0, 128, 0)
 
           inner_front_material = model.materials.add("Inner Skin Front Face")
           inner_front_material.color = Sketchup::Color.new(255, 0, 0)
 
-          inner_back_material = model.back_materials.add("Inner Skin Back Face")
+          inner_back_material = model.materials.add("Inner Skin Back Face")
           inner_back_material.color = Sketchup::Color.new(128, 0, 0)
         end
 
@@ -127,6 +127,10 @@ module TT::Plugins::SolidInspector2
             errors << SolidErrors::ReversedFace.new(face)
             possible_reversed_faces.delete(face)
           else
+
+            face.material = "Purple" if debug
+            face.back_material = face.material if debug
+
             possible_internal_faces << face
           end
         }
@@ -134,6 +138,8 @@ module TT::Plugins::SolidInspector2
         puts "> Ray tracing took: #{elapsed_time}s"
 
         Sketchup.status_text = "Finding internal faces..."
+
+        internal_faces = Set.new
 
         # Find faces that we know for sure must be internal.
         possible_internal_faces.to_a.each { |face|
@@ -148,6 +154,7 @@ module TT::Plugins::SolidInspector2
               face.material = inner_front_material
               face.back_material = inner_back_material
             end
+            internal_faces << face
             errors << SolidErrors::InternalFace.new(face)
             possible_internal_faces.delete(face)
           end
@@ -155,7 +162,7 @@ module TT::Plugins::SolidInspector2
 
         # Iteratively find outer skin faces. We are looking for faces where at
         # least two of it's edges connect to one other face confirmed to not be
-        # internal. We keep refining this until we find now new faces that match
+        # internal. We keep refining this until we find no new faces that match
         # this criteria.
         materials = []
         materials_back = []
@@ -176,15 +183,29 @@ module TT::Plugins::SolidInspector2
 
           new_outer = Set.new
 
+          # TODO: This isn't reliable. Need to iteratively find faces that are
+          # connected to other faces verified to be internal. If any of the
+          # edges have faces that all are marked for removal this face should be
+          # also marked for removal.
           possible_internal_faces.to_a.each { |face|
+
             outer_neighbours = face.edges.select { |edge|
               edge.faces.any? { |f| outer_faces.include?(f) }
             }
-            if outer_neighbours.size > 1
-              if debug
+
+            inner_neighbours = face.edges.select { |edge|
+              edge.faces.all? { |f| f == face || internal_faces.include?(f) }
+            }
+
+            if outer_neighbours.size > 1 && inner_neighbours.empty?
+              if debug #&& false # Reversed faces refinements
                 face.material = material
                 face.back_material = back_material
               end
+
+              face.material = Sketchup::Color.new(0, 92, 0) if debug
+              face.back_material = face.material if debug
+
               new_outer << face
             end
           }
