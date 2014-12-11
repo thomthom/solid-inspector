@@ -5,11 +5,13 @@ $(document).ready(function() {
 
   $("#fix-all").on("click", function() {
     callback("fix_all");
+    return false;
   });
 
   $(document).on("click", ".error-group .expand_info", function() {
     var $this = $(this);
     $this.siblings(".description").toggle();
+    return false;
   });
 
   $(document).on("click", ".error-group > .fix", function() {
@@ -18,7 +20,26 @@ $(document).ready(function() {
     var type = $error_group.data("type");
     var data = { "type" : type }
     callback("fix_group", data);
+    return false;
   });
+
+  $(document).on("click", ".error-group", function() {
+    $(".error-group").removeClass("selected");
+    var $error_group = $(this);
+    $error_group.toggleClass("selected");
+
+    var data = $error_group.data("type");
+    callback("select_group", [data]);
+
+    return false;
+  });
+
+  $(document).on("click", "#content", function() {
+    $(".error-group").removeClass("selected");
+    callback("select_group", [null]);
+    return false;
+  });
+
 });
 
 
@@ -41,6 +62,6 @@ function add_error_type(error_group) {
     <button class="fix">Fix</button>\
   </div>';
   var $group = $(html);
-  $group.data("type", error_group.type)
+  $group.data("type", error_group.type);
   $("#content").append($group);
 }

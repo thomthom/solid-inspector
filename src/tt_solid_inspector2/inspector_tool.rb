@@ -24,6 +24,7 @@ module TT::Plugins::SolidInspector2
     def initialize
       @errors = []
       @current_error = 0
+      @filtered_errors = nil
 
       @entities = nil
       @instance_path = nil
@@ -111,7 +112,12 @@ module TT::Plugins::SolidInspector2
 
 
     def draw(view)
-      @errors.each { |error|
+      if @filtered_errors.nil?
+        errors = @errors
+      else
+        errors = @errors.grep(@filtered_errors)
+      end
+      errors.each { |error|
         error.draw(view, @transformation)
       }
       nil
@@ -180,6 +186,10 @@ module TT::Plugins::SolidInspector2
         fix_group(data["type"])
         Sketchup.active_model.active_view.invalidate
       }
+      window.on("select_group") { |dialog, data|
+        select_group(data[0])
+        Sketchup.active_model.active_view.invalidate
+      }
       window
     end
 
@@ -197,6 +207,16 @@ module TT::Plugins::SolidInspector2
       }
       ErrorFinder.fix_errors(errors, @entities)
       analyze
+    end
+
+
+    def select_group(type)
+      if type.nil?
+        @filtered_errors = nil
+      else
+        klass = SolidErrors.const_get(type)
+        @filtered_errors = klass
+      end
     end
 
 

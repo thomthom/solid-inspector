@@ -12,6 +12,10 @@
   min-height: 65px;
 }
 
+.error-group.selected {
+  background: #fed;
+}
+
 .error-group .title {
   font-weight: bold;
   margin-bottom: 5px;
