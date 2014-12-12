@@ -1,2 +1,11 @@
 syntax: glob
+
+# Windows Files
+Thumbs.db
+
+# Sublime Text
 *.sublime-workspace
+
+# SketchUp
+*.skb
+Backup of *.layout
