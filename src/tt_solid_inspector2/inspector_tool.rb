@@ -160,6 +160,7 @@ module TT::Plugins::SolidInspector2
       grouped_errors = group_errors(@errors)
       #puts JSON.pretty_generate(grouped_errors)
       @window.call("list_errors", grouped_errors)
+      update_ui
       nil
     end
 
