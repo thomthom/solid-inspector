@@ -12,9 +12,9 @@ input, select, textarea, a[href]
 
 html {
   background: #fff;
-  color: #555555;
+  color: #444;
 
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
   font-size: 13px;
 
   cursor: default;
@@ -53,7 +53,7 @@ input[type="email"],
 input[type="password"] {
   color: #555555;
 
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
   font-size: 13px;
 
   border: 1px solid #cfcfcf;
@@ -71,25 +71,32 @@ button {
   color: #555555;
   background: #f7f7f7;
 
-  border: 1px solid #cfcfcf;
-  -webkit-border-radius: 1px;
-  border-radius: 1px;
+  border: 1px solid #bbb;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
 }
 
 button:hover {
-  -webkit-box-shadow: inset 0px 0px 20px 0px rgba(0,0,0,0.1);
-  box-shadow: inset 0px 0px 20px 0px rgba(0,0,0,0.1);
+  -webkit-box-shadow: inset 0px 0px 10px 0px rgba(0,0,0,0.2);
+  box-shadow: inset 0px 0px 10px 0px rgba(0,0,0,0.2);
 }
 
 button.default {
   color: #fff;
-  background: #c00 !important;
-  border: none;
+  background: #c33 !important;
+  border-color: #a00;
+  /*border: none;*/
 }
 
 button.default:hover {
-  -webkit-box-shadow: inset 0px 0px 20px 0px rgba(0,0,0,0.25);
-  box-shadow: inset 0px 0px 20px 0px rgba(0,0,0,0.25);
+  -webkit-box-shadow: inset 0px 0px 10px 0px rgba(0,0,0,0.5);
+  box-shadow: inset 0px 0px 10px 0px rgba(0,0,0,0.5);
+}
+
+button.default:disabled {
+  background: #fee !important;
+  border-color: #caa;
+  color: #caa;
 }
 
 button img {
@@ -137,12 +144,12 @@ button:disabled:hover {
   top: 0;
   left: 0;
   right: 0;
-  height: 14px; /* 9px + 14px + 9px == 32px */
-  padding: 9px 20px;
+  height: 32px; /* 10px + 32px + 10px == 52px */
+  padding: 10px 10px;
   /*color: #fff;
   background: #900;
   border-bottom: 10px solid #c00;*/
-  border-bottom: 1px solid #cccccc;
+  border-bottom: 5px solid #cccccc;
   background: #eee;
   z-index: 100;
 }
@@ -151,7 +158,7 @@ button:disabled:hover {
 #content {
   position: fixed;
   /*top: 42px;*/
-  top: 33px;
+  top: 57px;
   bottom: 53px;
   left: 0;
   right: 0;

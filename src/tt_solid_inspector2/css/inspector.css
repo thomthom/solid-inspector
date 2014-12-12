@@ -1,5 +1,22 @@
 /* Copyright 2014 Thomas Thomassen */
 
+#header {
+  font-size: 1.5em;
+  padding-left: 52px; /* 10px + 32px + 10px */
+  line-height: 32px;
+  background: #c33;
+  border-color: #a00;
+  color: #fff;
+}
+
+
+#header img {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+}
+
+
 #content {
   overflow: auto;
 }
@@ -26,15 +43,15 @@
 
 
 .error-group {
-  background: #ddd;
-  border-bottom: 1px solid #999;
+  background: #eee;
+  border-bottom: 1px solid #ccc;
   padding: 10px 110px 10px 10px;
   position: relative;
   min-height: 65px;
 }
 
 .error-group.selected {
-  background: #fed;
+  background: #ffe0d7;
 }
 
 .error-group .title {
@@ -49,6 +66,7 @@
   z-index: 10;
   left: 10px;
   top: 25px;
+  font-family: Arial, sans-serif;
   font-size: 50px;
   font-weight: bold;
   color: #aaa;
@@ -57,13 +75,12 @@
 .error-group .expand_info {
   display: inline-block;
   position: absolute;
-  top: 10px;
+  top: 12px;
   right: 110px;
   z-index: 25;
   text-decoration: none;
   font-weight: bold;
-  padding: 5px;
-  background: #aaa;
+  border: none;
 }
 
 .error-group .description {

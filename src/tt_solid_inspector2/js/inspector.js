@@ -73,7 +73,9 @@ function add_error_type(error_group) {
   html = '\
   <div class="error-group">\
     <div class="title">' + error_group.name + '</div>\
-    <a class="expand_info">?</a>\
+    <a class="expand_info">\
+      <img src="../images/Help-20.png" alt="?">\
+    </a>\
     <div class="count">' + error_group.errors.length + '</div>\
     <div class="description">' + error_group.description + '</div>\
     <button class="fix">Fix</button>\
