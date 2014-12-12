@@ -264,7 +264,7 @@ module TT::Plugins::SolidInspector2
       #if is_manifold
       if border_edges.empty?
 
-        puts "Analyzing face normals..."
+        #puts "Analyzing face normals..."
         Sketchup.status_text = "Analyzing face normals..."
 
         # The set of faces representing the outer skin.

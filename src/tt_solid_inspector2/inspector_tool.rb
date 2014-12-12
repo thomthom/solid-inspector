@@ -85,21 +85,22 @@ module TT::Plugins::SolidInspector2
 
       # Iterate over the error found using Tab, Up/Down, Left/Right.
       # Tab will zoom to the current error.
+      errors = filtered_errors
 
       if key == KEY_TAB
         if shift
-          @current_error = (@current_error - 1) % @errors.size
+          @current_error = (@current_error - 1) % errors.size
         else
-          @current_error = (@current_error + 1) % @errors.size
+          @current_error = (@current_error + 1) % errors.size
         end
       end
 
       if key == VK_UP || key == VK_RIGHT
-        @current_error = (@current_error + 1) % @errors.size
+        @current_error = (@current_error + 1) % errors.size
       end
 
       if key == VK_DOWN || key == VK_LEFT
-        @current_error = (@current_error - 1) % @errors.size
+        @current_error = (@current_error - 1) % errors.size
       end
 
       if key == KEY_RETURN || key == KEY_TAB
@@ -112,12 +113,7 @@ module TT::Plugins::SolidInspector2
 
 
     def draw(view)
-      if @filtered_errors.nil?
-        errors = @errors
-      else
-        errors = @errors.grep(@filtered_errors)
-      end
-      errors.each { |error|
+      filtered_errors.each { |error|
         error.draw(view, @transformation)
       }
       nil
@@ -128,7 +124,7 @@ module TT::Plugins::SolidInspector2
 
 
     def analyze
-      puts "analyse"
+      #puts "analyse"
 
       model = Sketchup.active_model
       entities = model.active_entities
@@ -136,11 +132,11 @@ module TT::Plugins::SolidInspector2
       transformation = Geom::Transformation.new
 
       unless model.selection.empty?
-        puts "> Selection:"
+        #puts "> Selection:"
         instance = Sketchup.active_model.selection.find { |entity|
           Instance.is?(entity)
         }
-        puts "  > Instance: #{instance.inspect}"
+        #puts "  > Instance: #{instance.inspect}"
         if instance
           definition = Instance.definition(instance)
           entities = definition.entities
@@ -149,10 +145,11 @@ module TT::Plugins::SolidInspector2
         end
       end
 
-      puts "> Entities: #{entities}"
-      puts "> Instance Path: #{instance_path.inspect}"
-      puts "> Transformation: #{transformation.to_a}"
+      #puts "> Entities: #{entities}"
+      #puts "> Instance Path: #{instance_path.inspect}"
+      #puts "> Transformation: #{transformation.to_a}"
 
+      @filtered_errors = nil
       @current_error = 0
       @errors = ErrorFinder.find_errors(entities, transformation)
       @entities = entities
@@ -194,6 +191,16 @@ module TT::Plugins::SolidInspector2
     end
 
 
+    def filtered_errors
+      if @filtered_errors.nil?
+        errors = @errors
+      else
+        errors = @errors.grep(@filtered_errors)
+      end
+      errors
+    end
+
+
     def fix_all
       ErrorFinder.fix_errors(@errors, @entities)
       analyze
@@ -217,6 +224,8 @@ module TT::Plugins::SolidInspector2
         klass = SolidErrors.const_get(type)
         @filtered_errors = klass
       end
+      @current_error = 0
+      nil
     end
 
 
@@ -247,11 +256,23 @@ module TT::Plugins::SolidInspector2
 
 
     def zoom_to_error(view)
-      error = @errors[@current_error]
+      error = filtered_errors[@current_error]
       view.zoom(error.entities)
       # Adjust camera for the instance transformation
       camera = view.camera
-      tr = @transformation
+
+      point = view.camera.target
+      offset = view.pixels_to_model(1000, point)
+      #p offset
+      offset_point = point.offset(view.camera.direction.reverse, offset)
+      vector = point.vector_to(offset_point)
+      if vector.valid?
+        tr_offset = Geom::Transformation.new(vector)
+        tr = @transformation * tr_offset
+      else
+        tr = @transformation
+      end
+
       eye = camera.eye.transform(tr)
       target = camera.target.transform(tr)
       up = camera.up.transform(tr)
