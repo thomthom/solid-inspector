@@ -44,11 +44,28 @@ $(document).ready(function() {
 
 
 function list_errors(errors) {
+  // Clear old content.
   $("#content").text("");
+
+  // List errors.
   for (error_type in errors) {
     var error_group = errors[error_type];
     add_error_type(error_group);
   }
+
+  // Display friendly message is there are no errors.
+  if (Object.keys(errors).length == 0) {
+    var html = "\
+      <div id='no-errors'>\
+        No Errors<br>\
+        Everything is shiny\
+        <div id='smiley'>:)</div>\
+      </div>";
+    $("#content").html(html);
+  }
+
+  // Enable/Disabled the "Fix All" button.
+  $("#fix-all").prop("disabled", Object.keys(errors).length == 0);
 }
 
 

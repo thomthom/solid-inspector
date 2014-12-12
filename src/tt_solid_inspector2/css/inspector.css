@@ -4,6 +4,27 @@
   overflow: auto;
 }
 
+
+#no-errors {
+  color: #999;
+  font-size: 1.5em;
+  text-align: center;
+  line-height: 1.5em;
+  padding: 1em;
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+#smiley {
+  margin: 1em;
+  font-size: 2em;
+}
+
+
 .error-group {
   background: #ddd;
   border-bottom: 1px solid #999;

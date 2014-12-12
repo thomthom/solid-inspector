@@ -100,6 +100,16 @@ button * {
   vertical-align: middle;
 }
 
+button:disabled {
+  color: #bbb;
+  background: #eee;
+}
+
+button:disabled:hover {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
 
 .error {
   display: none;
