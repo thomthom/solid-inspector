@@ -171,6 +171,7 @@ module TT::Plugins::SolidInspector2
         materials = []
         materials_back = []
 
+        start_time = Time.new
         i = 0
         loop do
           i += 1
@@ -222,6 +223,9 @@ module TT::Plugins::SolidInspector2
           break if new_outer.empty?
           raise "Safety Break!" if i > 100 # Temp safety limit.
         end
+
+        elapsed_time = Time.now - start_time
+        puts "> Iteratively searching for internal faces took: #{elapsed_time}s"
 
         if debug && materials.size > 1
           puts "> Adjusting refinement colors..."
