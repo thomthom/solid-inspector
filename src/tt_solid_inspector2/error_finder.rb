@@ -349,7 +349,7 @@ module TT::Plugins::SolidInspector2
       # Now we're ready to perform the cleanup operations.
       model = entities.model
       begin
-        model.start_operation("Fix Solid", true)
+        model.start_operation("Repair Solid", true)
         entities.erase_entities(entities_to_be_erased.to_a)
         remaining_errors.each { |error|
           begin
