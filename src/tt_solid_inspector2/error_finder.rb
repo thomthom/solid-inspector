@@ -266,6 +266,7 @@ module TT::Plugins::SolidInspector2
 
         #puts "Analyzing face normals..."
         Sketchup.status_text = "Analyzing face normals..."
+        start_time = Time.new
 
         # The set of faces representing the outer skin.
         entity_set = Set.new(entities.grep(Sketchup::Face))
@@ -275,21 +276,22 @@ module TT::Plugins::SolidInspector2
         #  face.back_material = Sketchup::Color.new(0, 64, 0)
         #}
 
-        processed = Set.new()
-        stack = possible_reversed_faces.to_a
+        processed = Set.new(reversed_faces)
+        #stack = possible_reversed_faces.to_a
+        stack = (entity_set - processed).to_a
         i = 0
         until stack.empty?
           face = stack.shift
           next if processed.include?(face)
           if self.reversed_face?(face, transformation, entity_set)
             errors << SolidErrors::ReversedFace.new(face)
-            reversed_faces << face
+            #reversed_faces << face
             faces = face.edges.map { |edge| edge.faces }
             faces.flatten!
             faces.reject! { |f|
               processed.include?(f) ||
-              possible_reversed_faces.include?(f) ||
-              reversed_faces.include?(f) ||
+              #possible_reversed_faces.include?(f) ||
+              #reversed_faces.include?(f) ||
               internal_faces.include?(f)
             }
             processed << face
@@ -303,6 +305,9 @@ module TT::Plugins::SolidInspector2
       #internal_errors = errors.grep(SolidErrors::ReversedFace)
       #internal_set = Set.new(internal_errors.map { |x| x.entities }.flatten)
       #puts "#{internal_errors.size} vs #{internal_set.size}"
+
+      elapsed_time = Time.now - start_time
+      puts "> Reversed face detection took: #{elapsed_time}s"
 
       Sketchup.status_text = ""
 
@@ -410,6 +415,21 @@ module TT::Plugins::SolidInspector2
         #Sketchup.active_model.active_entities.add_cline(ray.first, point)
         ray = [point, direction]
         result = model.raytest(ray, false)
+      end
+      if path && !entity_set.include?(path.last)
+        # If the last entity we hit was not part of entity_set - meaning an
+        # internal face - it could be that it hit an internal face that is close
+        # to an outer face. The tolerance in SketchUp means the ray won't hit
+        # the final outer face. To account for this we assume this is the case
+        # and increment the hit count. This should correct some faces being
+        # reversed when they shouldn't.
+        # There might be some other edge cases where this happens internally -
+        # in which case I don't think it can be caught. Model with such close
+        # tolerances between the entities will have issues.
+        count += 1
+        #puts "miss!"
+        #pt2 = point.offset(Z_AXIS, 10)
+        #Sketchup.active_model.active_entities.add_cline(point, pt2)
       end
       count
     end
