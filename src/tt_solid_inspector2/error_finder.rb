@@ -431,7 +431,9 @@ module TT::Plugins::SolidInspector2
         # There might be some other edge cases where this happens internally -
         # in which case I don't think it can be caught. Model with such close
         # tolerances between the entities will have issues.
-        count += 1
+        if path.last.parent.entities == entities
+          count += 1
+        end
         #puts "miss!"
         #p path.last
         #p path.last.parent.entities
