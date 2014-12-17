@@ -314,6 +314,20 @@ module TT::Plugins::SolidInspector2
       elapsed_time = Time.now - start_time
       #puts "> Reversed face detection took: #{elapsed_time}s"
 
+
+      # Detect if there are nested entities.
+      groups = entities.grep(Sketchup::Group)
+      components = entities.grep(Sketchup::ComponentInstance)
+      instances = groups + components
+      instances.each { |instance|
+        errors << SolidErrors::NestedInstance.new(instance)
+      }
+
+
+      # Detect image entities.
+      # TODO
+
+
       Sketchup.status_text = ""
 
       errors

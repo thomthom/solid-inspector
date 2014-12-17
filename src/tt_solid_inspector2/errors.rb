@@ -338,12 +338,20 @@ module TT::Plugins::SolidInspector2
     class NestedInstance < SolidError
 
       def self.display_name
+        "Nested Instances"
+      end
+
+      def self.description
         "Nested instances will be exported correctly to STL file format. "\
         "But SketchUp's Solid Tools and #{PLUGIN_NAME} cannot process nested "\
         "instances as a solid."
       end
 
       def fix
+        # For now we don't try to "fix" anything. As the fix should be opted in
+        # for. Maybe a preference?
+        raise NotImplementedError
+
         return false if @entities[0].deleted?
         @entities[0].explode
         @fixed = true
