@@ -203,7 +203,8 @@ module TT::Plugins::SolidInspector2
 
 
     def fix_all
-      ErrorFinder.fix_errors(@errors, @entities)
+      all_errors_fixed = ErrorFinder.fix_errors(@errors, @entities)
+      process_fix_all_results(all_errors_fixed)
       analyze
     end
 
@@ -213,8 +214,27 @@ module TT::Plugins::SolidInspector2
       errors = @errors.select { |error|
         error.is_a?(error_klass)
       }
-      ErrorFinder.fix_errors(errors, @entities)
+      all_errors_fixed = ErrorFinder.fix_errors(errors, @entities)
+      process_fix_results(all_errors_fixed, error_klass)
       analyze
+    end
+
+
+    def process_fix_results(all_errors_fixed, error_klass)
+      unless all_errors_fixed
+        UI.messagebox(error_klass.description)
+      end
+      nil
+    end
+
+
+    def process_fix_all_results(all_errors_fixed)
+      unless all_errors_fixed
+        message = "Some errors could not be automatically fixed. "\
+          "Manually inspect and correct the errors, then run the tool again."
+        UI.messagebox(message)
+      end
+      nil
     end
 
 

@@ -321,6 +321,7 @@ module TT::Plugins::SolidInspector2
 
 
     def self.fix_errors(errors, entities)
+      all_errors_fixed = true
       # For performance reasons we sort out the different errors and handle them
       # differently depending on their traits.
       entities_to_be_erased = Set.new
@@ -360,7 +361,7 @@ module TT::Plugins::SolidInspector2
           begin
             error.fix
           rescue NotImplementedError => e
-            p e
+            all_errors_fixed = false
           end
         }
         model.commit_operation
@@ -369,7 +370,7 @@ module TT::Plugins::SolidInspector2
         model.commit_operation
         raise
       end
-      nil
+      all_errors_fixed
     end
 
 

@@ -98,7 +98,7 @@ module TT::Plugins::SolidInspector2
     end # module
 
 
-    # Mix-in module to mark that an erro can be fixed by erasing the entity.
+    # Mix-in module to mark that an error can be fixed by erasing the entity.
     # The purpose of this is to be able to perform a bulk erase operation which
     # is much faster than calling .erase! on each entity.
     module EraseToFix
@@ -152,7 +152,7 @@ module TT::Plugins::SolidInspector2
       end
 
       def self.description
-        "Hole edges are edges forming a hole within a face. These can be "\
+        "Hole edges are edges forming a hole within a face. These are "\
         "fixed automatically by removing the hole all together."
       end
 
@@ -212,7 +212,8 @@ module TT::Plugins::SolidInspector2
 
       def self.description
         "Internal faces are faces located on the inside of a mesh that should "\
-        "be a solid. These can be automatically fixed by erasing them."
+        "be a solid. These are automatically fixed by erasing the internal "\
+        "faces."
       end
 
       def draw(view, transformation = nil)
@@ -237,7 +238,7 @@ module TT::Plugins::SolidInspector2
 
       def self.description
         "Many applications will not be able to treat a mesh as a solid if the "\
-        "face normal (direciton) isn't all uniform. The front side of a face "\
+        "face normal (direction) isn't all uniform. The front side of a face "\
         "must be facing outwards. These can be fixed automatically by "\
         "reversing the faces."
       end
@@ -269,7 +270,7 @@ module TT::Plugins::SolidInspector2
 
       def self.description
         "Stray edges are not connected to any faces and doesn't form any part "\
-        "of solids. These can automatically fixed by erasing them."
+        "of solids. These are automatically fixed by erasing the stray edges."
       end
 
       def draw(view, transformation = nil)
@@ -289,7 +290,9 @@ module TT::Plugins::SolidInspector2
       end
 
       def self.description
-        "Edges that form the border of a surface or a hole in the mesh."
+        "Edges that form the border of a surface or a hole in the mesh. "\
+        "These cannot be fixed automatically. Manually close the mesh and "\
+        "run the tool again."
       end
 
       def draw(view, transformation = nil)
@@ -313,7 +316,8 @@ module TT::Plugins::SolidInspector2
       end
 
       def self.description
-        "Edges that form the a hole in a face."
+        "Edges that form the a hole in a face. These are fixed automatically "\
+        "by erasing the hole."
       end
 
       def draw(view, transformation = nil)
@@ -330,11 +334,13 @@ module TT::Plugins::SolidInspector2
     # TODO: Is this needed? STL export flattens the nested hierarchy of
     #   instances.
     # Maybe it shouldn't "fix" by exploding but instead yield a message to why
-    # SketchUp's Enity Info dialog doesn't say "Solid".
+    # SketchUp's Entity Info dialog doesn't say "Solid".
     class NestedInstance < SolidError
 
       def self.display_name
-        "Nested Instances"
+        "Nested instances will be exported correctly to STL file format. "\
+        "But SketchUp's Solid Tools and #{PLUGIN_NAME} cannot process nested "\
+        "instances as a solid."
       end
 
       def fix
