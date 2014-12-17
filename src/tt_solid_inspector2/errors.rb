@@ -74,8 +74,6 @@ module TT::Plugins::SolidInspector2
 
 
     # TODO: HiddenFace (?)
-    # TODO: FaceHoleEdge
-    # TODO: MeshHoleEdge (?)
 
 
     # Healing MeshHoles:

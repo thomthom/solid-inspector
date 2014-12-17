@@ -39,6 +39,13 @@ module TT::Plugins::SolidInspector2
 
   ### MAIN SCRIPT ### ----------------------------------------------------------
 
+  # Constants for Sketchup::Face.mesh
+  PolygonMeshPoints   = 0
+  PolygonMeshUVQFront = 1
+  PolygonMeshUVQBack  = 2
+  PolygonMeshNormals  = 4
+
+
   def self.inspect_solid
     Sketchup.active_model.select_tool(InspectorTool.new)
   end

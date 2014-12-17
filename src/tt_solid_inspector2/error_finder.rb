@@ -188,10 +188,9 @@ module TT::Plugins::SolidInspector2
 
           new_outer = Set.new
 
-          # TODO: This isn't reliable. Need to iteratively find faces that are
-          # connected to other faces verified to be internal. If any of the
-          # edges have faces that all are marked for removal this face should be
-          # also marked for removal.
+          # Need to iteratively find faces that are connected to other faces
+          # verified to be internal. If any of the edges have faces that all
+          # are marked for removal this face should be also marked for removal.
           possible_internal_faces.to_a.each { |face|
             # Look for neighboring faces that are known to be outer faces.
             outer_neighbours = face.edges.select { |edge|
@@ -261,9 +260,6 @@ module TT::Plugins::SolidInspector2
       # are oriented consistently.
       # Stray edges are ignored from this because they won't interfere with the
       # surface detection.
-      #
-      # TODO(thomthom): When there are no border edges, perform this check by
-      # ignoring the faces marked as internal.
       start_time = Time.new
       is_manifold = border_edges.empty? && edges_with_internal_faces.empty?
       if border_edges.empty?
@@ -404,8 +400,6 @@ module TT::Plugins::SolidInspector2
 
     def self.face_outward?(face, transformation, front_face_direction = true)
       entities = face.parent.entities
-      # TODO: Check if the centroid is over a hole? Maybe use the centroid of
-      # one of the face's triangles?
       point_on_face = self.point_on_face(face)
       # Shoot rays in each direction of the face and count how many times it
       # intersect with the current entities set.
@@ -487,7 +481,7 @@ module TT::Plugins::SolidInspector2
 
     def self.point_on_face(face)
       invalid = Sketchup::Face::PointOnVertex | Sketchup::Face::PointOnEdge
-      mesh = face.mesh(0) # TODO: Constant
+      mesh = face.mesh(PolygonMeshPoints)
       (1..mesh.count_polygons).each { |i|
         points = mesh.polygon_points_at(i)
         point = self.average(points)
