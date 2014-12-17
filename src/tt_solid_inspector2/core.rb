@@ -45,6 +45,11 @@ module TT::Plugins::SolidInspector2
   PolygonMeshUVQBack  = 2
   PolygonMeshNormals  = 4
 
+  # Constants for Tool.onCancel
+  REASON_ESC = 0
+  REASON_REACTIVATE = 1
+  REASON_UNDO = 2
+
 
   def self.inspect_solid
     Sketchup.active_model.select_tool(InspectorTool.new)

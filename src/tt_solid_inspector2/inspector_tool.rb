@@ -78,6 +78,16 @@ module TT::Plugins::SolidInspector2
     end
 
 
+    def onKeyDown(key, repeat, flags, view)
+      if key == KEY_ESCAPE
+        deselect_tool
+        return true
+      end
+
+      false # Returning true would cancel the key event.
+    end
+
+
     def onKeyUp(key, repeat, flags, view)
       return if @errors.empty?
 
@@ -165,6 +175,11 @@ module TT::Plugins::SolidInspector2
     end
 
 
+    def deselect_tool
+      Sketchup.active_model.select_tool(nil)
+    end
+
+
     def create_window
       window = InspectorWindow.new
       window.set_on_close {
@@ -188,19 +203,23 @@ module TT::Plugins::SolidInspector2
         select_group(data[0])
         Sketchup.active_model.active_view.invalidate
       }
+      window.on("keydown") { |dialog, data|
+        forward_key_up(:onKeyDown, data)
+      }
       window.on("keyup") { |dialog, data|
-        forward_key_up(data)
+        forward_key_up(:onKeyUp, data)
       }
       window
     end
 
 
-    def forward_key_up(jquery_event)
+    def forward_key_up(method, jquery_event)
       key = jquery_event["which"]
       repeat = false
       flags = 0
       view = Sketchup.active_model.active_view
-      onKeyUp(key, repeat, flags, view)
+      p key
+      send(method, key, repeat, flags, view)
       nil
     end
 
