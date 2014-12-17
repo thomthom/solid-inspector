@@ -42,16 +42,20 @@ $(document).ready(function() {
     return false;
   });
 
+  /*
+  // Key up and down trigger too mast for async OSX.
   $(document).on("keydown", function(event) {
-    callback("keydown", event);
+    return false;
+    callback("keydown", { key : event.which });
     if (event.which == KEY_TAB) {
       event.preventDefault();
       return true;
     }
     return false;
   });
+  */
   $(document).on("keyup", function(event) {
-    callback("keyup", event);
+    callback("keyup", { key : event.which });
     if (event.which == KEY_TAB) {
       event.preventDefault();
       return true;

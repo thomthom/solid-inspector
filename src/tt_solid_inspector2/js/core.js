@@ -8,6 +8,12 @@ var KEYCODE_ENTER = 13
 var l10n_strings = {};
 
 
+window.onerror = function(message, location, linenumber, error) {
+  alert(message + "\nLine: " + linenumber + "\nlocation: " + location + "\nerror: " + error);
+  return false;
+};
+
+
 // Utility method to call back to Ruby, taking an optional JSON object as
 // payload.
 function callback(name, data) {
