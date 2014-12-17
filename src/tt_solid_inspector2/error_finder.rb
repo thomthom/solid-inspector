@@ -141,7 +141,7 @@ module TT::Plugins::SolidInspector2
           end
         }
         elapsed_time = Time.now - start_time
-        puts "> Ray tracing took: #{elapsed_time}s"
+        #puts "> Ray tracing took: #{elapsed_time}s"
 
         Sketchup.status_text = "Finding internal faces..."
 
@@ -178,7 +178,7 @@ module TT::Plugins::SolidInspector2
 
           Sketchup.status_text = "Refining search for internal faces (#{i})..."
 
-          puts "> Refine: #{i}"
+          #puts "> Refine: #{i}"
           if debug
             material = entities.model.materials.add("RefineFront")
             back_material = entities.model.materials.add("RefineBack")
@@ -221,15 +221,15 @@ module TT::Plugins::SolidInspector2
           possible_internal_faces.subtract(new_outer)
 
           break if new_outer.empty?
-          raise "Safety Break!" if i > 100 # Temp safety limit.
+          #raise "Safety Break!" if i > 100 # Temp safety limit.
         end
 
         elapsed_time = Time.now - start_time
-        puts "> Iteratively searching for internal faces took: #{elapsed_time}s"
+        #puts "> Iteratively searching for internal faces took: #{elapsed_time}s"
 
         if debug && materials.size > 1
-          puts "> Adjusting refinement colors..."
-          puts "  > #{materials.size}"
+          #puts "> Adjusting refinement colors..."
+          #puts "  > #{materials.size}"
 
           front_color_step = 192.0 / materials.size
           back_color_step = 128.0 / materials.size
@@ -264,8 +264,8 @@ module TT::Plugins::SolidInspector2
       #
       # TODO(thomthom): When there are no border edges, perform this check by
       # ignoring the faces marked as internal.
+      start_time = Time.new
       is_manifold = border_edges.empty? && edges_with_internal_faces.empty?
-      #if is_manifold
       if border_edges.empty?
 
         #puts "Analyzing face normals..."
@@ -280,7 +280,7 @@ module TT::Plugins::SolidInspector2
         #  face.back_material = Sketchup::Color.new(0, 64, 0)
         #}
 
-        processed = Set.new(reversed_faces)
+        processed = Set.new(reversed_faces + internal_faces)
         #stack = possible_reversed_faces.to_a
         stack = (entity_set - processed).to_a
         i = 0
@@ -288,6 +288,7 @@ module TT::Plugins::SolidInspector2
           face = stack.shift
           next if processed.include?(face)
           if self.reversed_face?(face, transformation, entity_set)
+            #p face
             errors << SolidErrors::ReversedFace.new(face)
             #reversed_faces << face
             faces = face.edges.map { |edge| edge.faces }
@@ -302,7 +303,7 @@ module TT::Plugins::SolidInspector2
             stack.concat(faces)
           end
           i += 1
-          raise "Safety Break!" if i > 10000 # Temp safety limit.
+          #raise "Safety Break!" if i > 10000 # Temp safety limit.
         end
       end
 
@@ -311,7 +312,7 @@ module TT::Plugins::SolidInspector2
       #puts "#{internal_errors.size} vs #{internal_set.size}"
 
       elapsed_time = Time.now - start_time
-      puts "> Reversed face detection took: #{elapsed_time}s"
+      #puts "> Reversed face detection took: #{elapsed_time}s"
 
       Sketchup.status_text = ""
 
@@ -432,6 +433,9 @@ module TT::Plugins::SolidInspector2
         # tolerances between the entities will have issues.
         count += 1
         #puts "miss!"
+        #p path.last
+        #p path.last.parent.entities
+        #p entities
         #pt2 = point.offset(Z_AXIS, 10)
         #Sketchup.active_model.active_entities.add_cline(point, pt2)
       end

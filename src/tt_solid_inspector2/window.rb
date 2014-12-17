@@ -25,7 +25,7 @@ module TT::Plugins::SolidInspector2
       @events = {}
 
       add_action_callback("callback") { |dialog, name|
-        puts "Callback: 'callback(#{name})'"
+        #puts "Callback: 'callback(#{name})'"
         json = get_element_value("SU_BRIDGE")
         if json && json.size > 0
           data = JSON.parse(json)
@@ -36,12 +36,12 @@ module TT::Plugins::SolidInspector2
       }
 
       on("html_ready") { |dialog|
-        puts "Window.html_ready"
+        #puts "Window.html_ready"
         @on_ready.call(dialog) unless @on_ready.nil?
       }
 
       on("close_window") { |dialog|
-        puts "Window.close_window"
+        #puts "Window.close_window"
         dialog.close
       }
     end

@@ -34,14 +34,14 @@ module TT::Plugins::SolidInspector2
       }
 
       on("fix_all") { |dialog, data|
-        puts ""
-        puts "InspectorWindow.fix_all"
+        #puts ""
+        #puts "InspectorWindow.fix_all"
       }
 
       on("select_group") { |dialog, data|
-        puts ""
-        puts "InspectorWindow.select_group"
-        p data
+        #puts ""
+        #puts "InspectorWindow.select_group"
+        #p data
       }
 
       html_file = File.join(PATH, "html", "inspector.html")
