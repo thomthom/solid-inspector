@@ -20,26 +20,29 @@ module TT::Plugins::SolidInspector2
 
 
     def draw_instance(view, instance, transformation = nil)
+      return false if instance.deleted?
       points = boundingbox_segments(instance.bounds)
       transform_points(points, transformation)
       view.line_stipple = ""
       view.line_width = 2
       view.draw(GL_LINES, points)
-      nil
+      true
     end
 
 
     def draw_edge(view, edge, transformation = nil)
+      return false if edge.deleted?
       points = offset_toward_camera(view, edge.vertices)
       transform_points(points, transformation)
       view.line_stipple = ""
       view.line_width = 3
       view.draw(GL_LINES, points)
-      nil
+      true
     end
 
 
     def draw_face(view, face, transformation = nil)
+      return false if face.deleted?
       mesh = face.mesh(POLYGON_MESH_POINTS)
       points = offset_toward_camera(view, mesh.points)
       transform_points(points, transformation)
@@ -52,7 +55,7 @@ module TT::Plugins::SolidInspector2
         }
       }
       view.draw(GL_TRIANGLES, triangles)
-      nil
+      true
     end
 
 
