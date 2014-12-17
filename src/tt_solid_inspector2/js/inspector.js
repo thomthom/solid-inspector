@@ -1,5 +1,7 @@
 // Copyright 2014 Thomas Thomassen
 
+var KEY_TAB = 9;
+
 
 $(document).ready(function() {
 
@@ -37,6 +39,23 @@ $(document).ready(function() {
   $(document).on("click", "#content", function() {
     $(".error-group").removeClass("selected");
     callback("select_group", [null]);
+    return false;
+  });
+
+  $(document).on("keydown", function(event) {
+    callback("keydown", event);
+    if (event.which == KEY_TAB) {
+      event.preventDefault();
+      return true;
+    }
+    return false;
+  });
+  $(document).on("keyup", function(event) {
+    callback("keyup", event);
+    if (event.which == KEY_TAB) {
+      event.preventDefault();
+      return true;
+    }
     return false;
   });
 

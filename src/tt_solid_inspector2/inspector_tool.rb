@@ -188,7 +188,20 @@ module TT::Plugins::SolidInspector2
         select_group(data[0])
         Sketchup.active_model.active_view.invalidate
       }
+      window.on("keyup") { |dialog, data|
+        forward_key_up(data)
+      }
       window
+    end
+
+
+    def forward_key_up(jquery_event)
+      key = jquery_event["which"]
+      repeat = false
+      flags = 0
+      view = Sketchup.active_model.active_view
+      onKeyUp(key, repeat, flags, view)
+      nil
     end
 
 
