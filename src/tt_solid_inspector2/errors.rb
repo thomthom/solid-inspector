@@ -342,9 +342,9 @@ module TT::Plugins::SolidInspector2
       end
 
       def self.description
-        "Nested instances will be exported correctly to STL file format. "\
-        "But SketchUp's Solid Tools and #{PLUGIN_NAME} cannot process nested "\
-        "instances as a solid."
+        "Nested instances will be exported correctly to STL file format by "\
+        "the Trimble SketchUp STL exporter, but SketchUp's Solid Tools and "\
+        "#{PLUGIN_NAME} doesn't treat nested instances as a solid."
       end
 
       def fix
@@ -356,6 +356,27 @@ module TT::Plugins::SolidInspector2
         @entities[0].explode
         @fixed = true
         true
+      end
+
+      def draw(view, transformation = nil)
+        view.drawing_color = ERROR_COLOR_EDGE
+        draw_instance(view, @entities[0], transformation)
+        nil
+      end
+
+    end # class
+
+
+    class ImageEntity < SolidError
+
+      def self.display_name
+        "Image Entity"
+      end
+
+      def self.description
+        "Image entities isn't exported by the Trimble SketchUp STL exporter, "\
+        "but it prevent SketchUp's Solid Tools from performing it's "\
+        "operations on the object."
       end
 
       def draw(view, transformation = nil)

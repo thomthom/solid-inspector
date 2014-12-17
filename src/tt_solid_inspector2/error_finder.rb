@@ -325,7 +325,9 @@ module TT::Plugins::SolidInspector2
 
 
       # Detect image entities.
-      # TODO
+      entities.grep(Sketchup::Image) { |image|
+        errors << SolidErrors::ImageEntity.new(image)
+      }
 
 
       Sketchup.status_text = ""
