@@ -492,8 +492,9 @@ module TT::Plugins::SolidInspector2
           return point
         end
       }
-      warn "Degenerate face!"
-      mesh.polygon_points_at(1)
+      warn "Degenerate face! (EntityID: #{face.entityID})"
+      points = mesh.polygon_points_at(1)
+      point = self.average(points)
     end
 
 
