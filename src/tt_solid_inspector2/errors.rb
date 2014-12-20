@@ -251,6 +251,10 @@ module TT::Plugins::SolidInspector2
       def draw(view, transformation = nil)
         view.drawing_color = ERROR_COLOR_FACE
         draw_face(view, @entities[0], transformation)
+        view.drawing_color = ERROR_COLOR_EDGE
+        @entities[0].edges.each { |edge|
+          draw_edge(view, edge, transformation)
+        }
         nil
       end
 
