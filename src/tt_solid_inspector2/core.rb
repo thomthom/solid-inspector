@@ -6,7 +6,30 @@
 #-------------------------------------------------------------------------------
 
 
+
 module TT::Plugins::SolidInspector2
+  if Sketchup.version.to_i < 14
+    if @extension.respond_to?(:uncheck)
+      # Must defer the disabling with a timer otherwise the setting won't be
+      # saved. I assume SketchUp save this setting after it loads the extension.
+      UI.start_timer(0, false) { @extension.uncheck }
+    end
+
+    options = {
+      :dialog_title    => PLUGIN_NAME,
+      :scrollable      => false,
+      :resizable       => true,
+      :width           => 400,
+      :height          => 200,
+      :left            => 400,
+      :top             => 300
+    }
+    html_file = File.join(PATH, "html", "compatibility.html")
+    @window = UI::WebDialog.new(options)
+    @window.set_size(400, 200)
+    @window.set_file(html_file)
+    @window.show
+  else
 
   require File.join(PATH, "inspector_tool.rb")
 
@@ -81,5 +104,7 @@ module TT::Plugins::SolidInspector2
   ensure
     $VERBOSE = original_verbose
   end
+
+  end # if Sketchup.version
 
 end # module

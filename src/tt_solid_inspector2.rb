@@ -32,13 +32,13 @@ module TT
 
   unless file_loaded?(__FILE__)
     loader = File.join(PATH, "core.rb")
-    ex = SketchupExtension.new(PLUGIN_NAME, loader)
-    ex.description = "Inspect and fix problems with geometry that should be "\
-      "manifold (solids)."
-    ex.version     = PLUGIN_VERSION
-    ex.copyright   = "Thomas Thomassen © 2010-2014"
-    ex.creator     = "Thomas Thomassen (thomas@thomthom.net)"
-    Sketchup.register_extension(ex, true)
+    @extension = SketchupExtension.new(PLUGIN_NAME, loader)
+    @extension.description = "Inspect and fix problems with geometry that "\
+      "should be manifold (solids)."
+    @extension.version     = PLUGIN_VERSION
+    @extension.copyright   = "Thomas Thomassen © 2010-2014"
+    @extension.creator     = "Thomas Thomassen (thomas@thomthom.net)"
+    Sketchup.register_extension(@extension, true)
   end
 
   end # module SolidInspector2
