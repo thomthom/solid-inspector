@@ -492,6 +492,8 @@ module TT::Plugins::SolidInspector2
           return point
         end
       }
+      # TODO: Consider raising an error that can be catched - excluding the face
+      # for processing since this can lead to unpredictable results.
       warn "Degenerate face! (EntityID: #{face.entityID})"
       points = mesh.polygon_points_at(1)
       point = self.average(points)
