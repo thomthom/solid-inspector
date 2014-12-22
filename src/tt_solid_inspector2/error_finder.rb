@@ -18,6 +18,12 @@ module TT::Plugins::SolidInspector2
     def self.find_errors(entities, transformation, debug = false)
       raise TypeError unless entities.is_a?(Sketchup::Entities)
 
+      if PLUGIN.debug_mode?
+        puts ""
+        puts "ErrorFinder.find_errors"
+      end
+      total_start_time = Time.new
+
       # TODO: Separate entities in group of them being connected to each other.
 
       errors = []
@@ -143,7 +149,9 @@ module TT::Plugins::SolidInspector2
           end
         }
         elapsed_time = Time.now - start_time
-        #puts "> Ray tracing took: #{elapsed_time}s"
+        if PLUGIN.debug_mode?
+          puts "> Finding external faces by ray tracing took: #{elapsed_time}s"
+        end
 
         Sketchup.status_text = "Finding internal faces..."
 
@@ -226,7 +234,9 @@ module TT::Plugins::SolidInspector2
         end
 
         elapsed_time = Time.now - start_time
-        #puts "> Iteratively searching for internal faces took: #{elapsed_time}s"
+        if PLUGIN.debug_mode?
+          puts "> Iteratively searching for internal faces took: #{elapsed_time}s"
+        end
 
         if debug && materials.size > 1
           #puts "> Adjusting refinement colors..."
@@ -317,7 +327,9 @@ module TT::Plugins::SolidInspector2
       #puts "#{internal_errors.size} vs #{internal_set.size}"
 
       elapsed_time = Time.now - start_time
-      #puts "> Reversed face detection took: #{elapsed_time}s"
+      if PLUGIN.debug_mode?
+        puts "> Reversed face detection took: #{elapsed_time}s"
+      end
 
 
       # Detect if there are nested entities.
@@ -336,6 +348,12 @@ module TT::Plugins::SolidInspector2
 
 
       Sketchup.status_text = ""
+
+      elapsed_time = Time.now - total_start_time
+      if PLUGIN.debug_mode?
+        puts "> Total analysis took: #{elapsed_time}s"
+        puts ""
+      end
 
       errors
     end
