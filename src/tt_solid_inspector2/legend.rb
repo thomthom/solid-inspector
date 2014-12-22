@@ -10,6 +10,7 @@ module TT::Plugins::SolidInspector2
 
   require File.join(PATH, "drawing_helper.rb")
   require File.join(PATH, "gl", "label.rb")
+  require File.join(PATH, "gl", "text.rb")
 
 
   class Legend
