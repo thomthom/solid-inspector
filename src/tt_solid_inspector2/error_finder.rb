@@ -110,6 +110,7 @@ module TT::Plugins::SolidInspector2
           possible_inner_face_material.color = Sketchup::Color.new(128, 255, 0)
         end
 
+        #puts "Finding external faces by ray tracing..."
         Sketchup.status_text = "Finding external faces by ray tracing..."
 
         # Shoot rays to find outer skin faces that we are 100% certain are not
@@ -129,6 +130,7 @@ module TT::Plugins::SolidInspector2
               face.back_material = outer_back_material
             end
             outer_faces << face
+            #puts "> ReversedFace: #{face.entityID}"
             errors << SolidErrors::ReversedFace.new(face)
             reversed_faces << face
             possible_reversed_faces.delete(face)
@@ -275,6 +277,12 @@ module TT::Plugins::SolidInspector2
         #  face.material = Sketchup::Color.new(0, 128, 0)
         #  face.back_material = Sketchup::Color.new(0, 64, 0)
         #}
+        # Need to include the faces' edges as well. Otherwise we get incorrect
+        # results.
+        entity_set_with_edges = Set.new(entity_set)
+        entity_set.each { |face|
+          entity_set_with_edges.merge(face.edges)
+        }
 
         processed = Set.new(reversed_faces + internal_faces)
         #stack = possible_reversed_faces.to_a
@@ -283,8 +291,9 @@ module TT::Plugins::SolidInspector2
         until stack.empty?
           face = stack.shift
           next if processed.include?(face)
-          if self.reversed_face?(face, transformation, entity_set)
+          if self.reversed_face?(face, transformation, entity_set_with_edges)
             #p face
+            #puts "> ReversedFace: #{face.entityID}"
             errors << SolidErrors::ReversedFace.new(face)
             #reversed_faces << face
             faces = face.edges.map { |edge| edge.faces }
@@ -394,6 +403,18 @@ module TT::Plugins::SolidInspector2
       ray = [point_on_face, face.normal]
       ray = self.transform_ray(ray, transformation)
       intersections = self.count_ray_intersections(ray, entities, entity_set)
+      #if intersections % 2 > 0
+      #  puts ""
+      #  puts "Face: #{face.entityID} - Intersections: #{intersections}"
+      #  puts "> Reversed: #{intersections % 2 > 0}"
+      #  puts "> Entities Set: #{entity_set.size}"
+      #  puts "> Ray: #{ray.inspect}"
+      #  puts "> Transformation: #{transformation.to_a}"
+      #  puts "> Point on Face: #{point_on_face.inspect}"
+      #  puts "> Face Normal: #{face.normal.inspect}"
+      #  puts ""
+      #  self.count_ray_intersections(ray, entities, entity_set, true)
+      #end
       intersections % 2 > 0
     end
 
@@ -410,19 +431,26 @@ module TT::Plugins::SolidInspector2
     end
 
 
-    def self.count_ray_intersections(ray, entities, entity_set = [])
+    def self.count_ray_intersections(ray, entities, entity_set = [], debug=false)
+      #puts "" if debug
+      #puts "count_ray_intersections" if debug
       #Sketchup.active_model.active_entities.add_cpoint(ray.first)
       model = entities.model
       entity_set = entities.to_a if entity_set.empty?
       direction = ray[1]
       result = model.raytest(ray, false)
       count = 0
+      #puts "> Before loop" if debug
       until result.nil?
-        raise "Safety Break!" if count > 100 # Temp safety limit.
+        #puts "  > ITERATION:" if debug
+        #raise "Safety Break!" if count > 100 # Temp safety limit.
         point, path = result
+        #puts "  > #{point.inspect} - #{path.inspect}" if debug
         # Check if the returned point hit within the instance.
         if path.last.parent.entities == entities
+          puts "  > Valid Entities" if debug
           if entity_set.include?(path.last)
+            puts "  > In entities set - incrementing..." if debug
             count += 1
           end
         end
@@ -432,6 +460,7 @@ module TT::Plugins::SolidInspector2
         ray = [point, direction]
         result = model.raytest(ray, false)
       end
+      #puts "> After loop" if debug
       if path && !entity_set.include?(path.last)
         # If the last entity we hit was not part of entity_set - meaning an
         # internal face - it could be that it hit an internal face that is close
@@ -442,16 +471,18 @@ module TT::Plugins::SolidInspector2
         # There might be some other edge cases where this happens internally -
         # in which case I don't think it can be caught. Model with such close
         # tolerances between the entities will have issues.
+        #puts "> Miss!" if debug
         if path.last.parent.entities == entities
+          #puts "  > Increment!" if debug
           count += 1
         end
-        #puts "miss!"
         #p path.last
         #p path.last.parent.entities
         #p entities
         #pt2 = point.offset(Z_AXIS, 10)
         #Sketchup.active_model.active_entities.add_cline(point, pt2)
       end
+      #puts "> Count #{count}" if debug
       count
     end
 
@@ -463,7 +494,7 @@ module TT::Plugins::SolidInspector2
       result = model.raytest(ray, false)
       count = 0
       until result.nil?
-        raise "Safety Break!" if count > 100 # Temp safety limit.
+        #raise "Safety Break!" if count > 100 # Temp safety limit.
         point, path = result
         # Check if the returned point hit within the instance.
         if path.last.parent.entities == entities
