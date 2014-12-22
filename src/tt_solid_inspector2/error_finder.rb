@@ -33,6 +33,8 @@ module TT::Plugins::SolidInspector2
       edges_with_internal_faces = Set.new
       internal_faces = Set.new
       reversed_faces = Set.new
+      oriented_faces = Set.new
+      all_faces = entities.grep(Sketchup::Face)
 
       Sketchup.status_text = "Inspecting edges..."
 
@@ -123,13 +125,14 @@ module TT::Plugins::SolidInspector2
         # internal.
         start_time = Time.new
         outer_faces = Set.new
-        entities.grep(Sketchup::Face) { |face|
+        all_faces.each { |face|
           if self.face_outward?(face, transformation, true)
             if debug
               face.material = outer_front_material
               face.back_material = outer_back_material
             end
             outer_faces << face
+            oriented_faces << face
           elsif self.face_outward?(face, transformation, false)
             if debug
               face.material = outer_front_material
@@ -272,63 +275,38 @@ module TT::Plugins::SolidInspector2
       # are oriented consistently.
       # Stray edges are ignored from this because they won't interfere with the
       # surface detection.
-      start_time = Time.new
       is_manifold = border_edges.empty? && edges_with_internal_faces.empty?
-      if border_edges.empty?
+      if border_edges.empty? && all_faces.size > 0
 
         #puts "Analyzing face normals..."
         Sketchup.status_text = "Analyzing face normals..."
         start_time = Time.new
 
         # The set of faces representing the outer skin.
-        entity_set = Set.new(entities.grep(Sketchup::Face))
+        entity_set = Set.new(all_faces)
         entity_set.subtract(internal_faces)
-        #entity_set.each { |face|
-        #  face.material = Sketchup::Color.new(0, 128, 0)
-        #  face.back_material = Sketchup::Color.new(0, 64, 0)
-        #}
-        # Need to include the faces' edges as well. Otherwise we get incorrect
-        # results.
-        entity_set_with_edges = Set.new(entity_set)
-        entity_set.each { |face|
-          entity_set_with_edges.merge(face.edges)
-        }
 
-        processed = Set.new(reversed_faces + internal_faces)
-        #stack = possible_reversed_faces.to_a
-        stack = (entity_set - processed).to_a
-        i = 0
-        until stack.empty?
-          face = stack.shift
-          next if processed.include?(face)
-          if self.reversed_face?(face, transformation, entity_set_with_edges)
-            #p face
-            #puts "> ReversedFace: #{face.entityID}"
-            errors << SolidErrors::ReversedFace.new(face)
-            #reversed_faces << face
-            faces = face.edges.map { |edge| edge.faces }
-            faces.flatten!
-            faces.reject! { |f|
-              processed.include?(f) ||
-              #possible_reversed_faces.include?(f) ||
-              #reversed_faces.include?(f) ||
-              internal_faces.include?(f)
-            }
-            processed << face
-            stack.concat(faces)
-          end
-          i += 1
-          #raise "Safety Break!" if i > 10000 # Temp safety limit.
+        if oriented_faces.empty?
+          #puts "> Searching for start face for surface orientation..."
+          start_face, reversed = self.find_start_face(entity_set, transformation)
+        else
+          # If we previously found some oriented faces in the inner faces check
+          # then use these in order to avoid doing more ray tracing.
+          start_face = self.find_largest_faces(oriented_faces)
         end
-      end
 
-      #internal_errors = errors.grep(SolidErrors::ReversedFace)
-      #internal_set = Set.new(internal_errors.map { |x| x.entities }.flatten)
-      #puts "#{internal_errors.size} vs #{internal_set.size}"
+        processed = Set.new(reversed_faces)
+        x = self.find_reversed_faces(entity_set, start_face, reversed, processed) { |face|
+          #puts "> Found Reversed Face: #{face}"
+          errors << SolidErrors::ReversedFace.new(face)
+        }
+        #puts "Reversed Faces (Surface Search): #{reversed_faces.size}"
+        #puts "Reversed Faces (Manifold Search): #{x.size}"
 
-      elapsed_time = Time.now - start_time
-      if PLUGIN.debug_mode?
-        puts "> Reversed face detection took: #{elapsed_time}s"
+        elapsed_time = Time.now - start_time
+        if PLUGIN.debug_mode?
+          puts "> Reversed face detection took: #{elapsed_time}s"
+        end
       end
 
 
@@ -356,6 +334,80 @@ module TT::Plugins::SolidInspector2
       end
 
       errors
+    end
+
+
+    def self.find_largest_faces(faces)
+      faces.max { |a, b| a.area <=> b.area }
+    end
+
+
+    def self.find_start_face(faces, transformation)
+      # We try to inspect the largest faces first in an attempt to avoid
+      # precision issues that might occur with tiny faces.
+      sorted_faces = faces.sort { |a, b| a.area <=> b.area }
+      sorted_faces.each { |face|
+        if self.face_outward?(face, transformation, true)
+          return [face, false]
+        elsif self.face_outward?(face, transformation, false)
+          return [face, true]
+        end
+      }
+      nil
+    end
+
+
+    # @param [Set<Sketchup::Face>] faces Manifold surface faces.
+    # @param [Sketchup::Face] faces Face to orient the surface by.
+    def self.find_reversed_faces(faces, start_face, start_reversed, processed = Set.new, &block)
+      #puts ""
+      #puts "ErrorFinder.find_reversed_faces"
+      #puts "> faces: #{faces.to_a}"
+      #puts "> processed: #{processed.to_a}"
+      #processed = Set.new
+      unless start_face.is_a?(Sketchup::Face)
+        raise TypeError, "start_face must be Sketchup::Face: #{start_face.inspect}"
+      end
+      reversed = Set.new
+      if start_reversed
+        reversed << start_face
+        block.call(start_face)
+      end
+      stack = [start_face]
+      until stack.empty?
+        face = stack.shift
+        next if processed.include?(face)
+        #next unless faces.include?(face)
+        processed << face
+        face.edges.each { |edge|
+          next_faces = edge.faces.select { |f| f != face && faces.include?(f) }
+          raise RunTimeError, "Unexpected internal faces" if next_faces.size > 1
+          raise RunTimeError, "Unexpected border face" if next_faces.empty?
+          #next if next_faces.empty?
+          next_face = next_faces[0]
+          next if processed.include?(next_face)
+          #next unless faces.include?(next_face)
+          next if stack.include?(next_face)
+          if reversed.include?(face)
+            # If the current face is reversed we must check that the edge is
+            # not reversed in both faces.
+            if edge.reversed_in?(face) != edge.reversed_in?(next_face)
+              reversed << next_face
+              block.call(next_face)
+            end
+          else
+            # If the edge is reversed on both faces then the next face is
+            # reversed.
+            if edge.reversed_in?(face) == edge.reversed_in?(next_face)
+              reversed << next_face
+              block.call(next_face)
+            end
+          end
+          stack << next_face
+        }
+      end
+      #puts ""
+      reversed
     end
 
 
