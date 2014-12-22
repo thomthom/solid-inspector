@@ -64,6 +64,11 @@ module TT::Plugins::SolidInspector2
       end
     end
 
+    # return [Geom::Point3d]
+    def screen_position(view)
+      point = screen_point(@position, view)
+    end
+
     # return [Geom::Vector3d] Leader vector
     def screen_position_vector(view)
       point = screen_point(@position, view)
@@ -103,6 +108,38 @@ module TT::Plugins::SolidInspector2
     end
 
   end # class Legend
+
+
+  class LegendGroup < Legend
+
+    def initialize(legend)
+      super(legend.position)
+      @legends = []
+      add_legend(legend)
+    end
+
+    def add_legend(legend)
+      @legends << legend
+    end
+
+    def bounds(view)
+      @legends.first.bounds(view)
+    end
+
+    def draw(view)
+      # TODO: Need to account for different legend types.
+      @legends.first.draw(view)
+
+      if @legends.size > 1
+        pt1 = screen_position(view)
+        pt2 = pt1.offset(leader_vector)
+        text_pt = pt2.offset(X_AXIS, icon_size + 4)
+        text_pt.y -= 8
+        view.draw_text(text_pt, "#{@legends.size}")
+      end
+    end
+
+  end # class LegendGroup
 
 
   class WarningLegend < Legend

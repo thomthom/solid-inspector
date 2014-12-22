@@ -28,6 +28,7 @@ module TT::Plugins::SolidInspector2
       @filtered_errors = nil
 
       @legends = []
+      @screen_legends = nil
 
       @entities = nil
       @instance_path = nil
@@ -62,6 +63,7 @@ module TT::Plugins::SolidInspector2
 
 
     def resume(view)
+      @screen_legends = nil
       view.invalidate
       update_ui
       nil
@@ -124,7 +126,16 @@ module TT::Plugins::SolidInspector2
       filtered_errors.each { |error|
         error.draw(view, @transformation)
       }
-      @legends.each { |legend|
+
+      if @screen_legends.nil?
+        start_time = Time.now
+        @screen_legends = merge_close_legends(@legends, view)
+        @legend_time = Time.now - start_time
+      end
+      if @legend_time
+        view.draw_text([20, 20, 0], "Legend Merge: #{@legend_time}")
+      end
+      @screen_legends.each { |legend|
         legend.draw(view)
       }
       nil
@@ -172,6 +183,7 @@ module TT::Plugins::SolidInspector2
         point = mid_point(edge).transform(@transformation)
         WarningLegend.new(point)
       }
+      @screen_legends = nil
 
       # Push results to webdialog.
       grouped_errors = group_errors(@errors)
@@ -344,6 +356,21 @@ module TT::Plugins::SolidInspector2
     def mid_point(edge)
       pt1, pt2 = edge.vertices.map { |vertex| vertex.position }
       Geom.linear_combination(0.5, pt1, 0.5, pt2)
+    end
+
+
+    def merge_close_legends(legends, view)
+      merged = []
+      legends.each { |legend|
+        next unless legend.on_screen?(view)
+        group = merged.find { |l| legend.intersect?(l, view) }
+        if group
+          group.add_legend(legend)
+        else
+          merged << LegendGroup.new(legend)
+        end
+      }
+      merged
     end
 
 
