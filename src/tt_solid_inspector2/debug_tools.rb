@@ -16,14 +16,6 @@ module TT::Plugins::SolidInspector2
 
   class DebugFaceReversedTool
 
-    DRAW_OPEN_SQUARE     = 1
-    DRAW_FILLED_SQUARE   = 2
-    DRAW_PLUS            = 3
-    DRAW_CROSS           = 4
-    DRAW_STAR            = 5
-    DRAW_OPEN_TRIANGLE   = 6
-    DRAW_FILLED_TRIANGLE = 7
-
 
     def initialize
       @faces = Sketchup.active_model.selection.grep(Sketchup::Face)

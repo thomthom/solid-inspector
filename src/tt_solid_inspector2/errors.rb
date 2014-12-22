@@ -389,6 +389,27 @@ module TT::Plugins::SolidInspector2
 
     end # class
 
+
+    class ShortEdge < SolidError
+
+      def self.display_name
+        "Short Edges"
+      end
+
+      def self.description
+        "Small geometry might cause unpredictable results due to precision "\
+        "errors. It's beneficial to try to avoid such small geometry. This "\
+        "cannot be automatically fixed."
+      end
+
+      def draw(view, transformation = nil)
+        view.drawing_color = ERROR_COLOR_EDGE
+        draw_edge(view, @entities[0], transformation)
+        nil
+      end
+
+    end # class
+
   end # module SolidErrors
 
 end # module TT::Plugins::SolidInspector2

@@ -311,18 +311,41 @@ module TT::Plugins::SolidInspector2
 
 
       # Detect if there are nested entities.
+      start_time = Time.new
       groups = entities.grep(Sketchup::Group)
       components = entities.grep(Sketchup::ComponentInstance)
       instances = groups + components
       instances.each { |instance|
         errors << SolidErrors::NestedInstance.new(instance)
       }
+      elapsed_time = Time.now - start_time
+      if PLUGIN.debug_mode?
+        puts "> Instance detection took: #{elapsed_time}s"
+      end
 
 
       # Detect image entities.
+      start_time = Time.new
       entities.grep(Sketchup::Image) { |image|
         errors << SolidErrors::ImageEntity.new(image)
       }
+      elapsed_time = Time.now - start_time
+      if PLUGIN.debug_mode?
+        puts "> Image detection took: #{elapsed_time}s"
+      end
+
+
+      # Detect small edges.
+      start_time = Time.new
+      entities.grep(Sketchup::Edge) { |edge|
+        if edge.length < 3.mm
+          errors << SolidErrors::ShortEdge.new(edge)
+        end
+      }
+      elapsed_time = Time.now - start_time
+      if PLUGIN.debug_mode?
+        puts "> Short edge detection took: #{elapsed_time}s"
+      end
 
 
       Sketchup.status_text = ""
