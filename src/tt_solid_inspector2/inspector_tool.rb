@@ -14,6 +14,7 @@ module TT::Plugins::SolidInspector2
   require File.join(PATH, "inspector_window.rb")
   require File.join(PATH, "instance.rb")
   require File.join(PATH, "key_codes.rb")
+  require File.join(PATH, "legend.rb")
 
 
   class InspectorTool
@@ -25,6 +26,8 @@ module TT::Plugins::SolidInspector2
       @errors = []
       @current_error = 0
       @filtered_errors = nil
+
+      @legends = []
 
       @entities = nil
       @instance_path = nil
@@ -120,9 +123,9 @@ module TT::Plugins::SolidInspector2
     def draw(view)
       filtered_errors.each { |error|
         error.draw(view, @transformation)
-        if error.is_a?(SolidErrors::ShortEdge)
-          draw_short_edge_error(error, view)
-        end
+      }
+      @legends.each { |legend|
+        legend.draw(view)
       }
       nil
     end
@@ -163,6 +166,12 @@ module TT::Plugins::SolidInspector2
       @entities = entities
       @instance_path = instance_path
       @transformation = transformation
+
+      @legends = @errors.grep(SolidErrors::ShortEdge).map { |error|
+        edge = error.entities[0]
+        point = mid_point(edge).transform(@transformation)
+        WarningLegend.new(point)
+      }
 
       # Push results to webdialog.
       grouped_errors = group_errors(@errors)
@@ -332,90 +341,11 @@ module TT::Plugins::SolidInspector2
     end
 
 
-    def draw_short_edge_error(error, view)
-      edge = error.entities[0]
-
-      leader_length = 15
-      point = mid_point(edge).transform(@transformation)
-      pt1 = screen_point(point, view)
-      pt2 = pt1.offset(X_AXIS, leader_length)
-      offset_vector = ORIGIN.vector_to(pt1)
-
-      warning_color = Sketchup::Color.new(255, 153, 0)
-
-      view.drawing_color = warning_color
-      view.line_width = 2
-      view.line_stipple = ''
-
-      draw2d_point_square(pt1, 6, view)
-      line = adjust([pt1, pt2], nil, false)
-      view.draw2d(GL_LINES, pt1, pt2)
-
-      triangle = [
-        Geom::Point3d.new(leader_length,       8, 0),
-        Geom::Point3d.new(leader_length + 16,  8, 0),
-        Geom::Point3d.new(leader_length +  8, -8, 0)
-      ]
-      triangle = adjust(triangle, offset_vector, false)
-      view.draw2d(GL_TRIANGLES, triangle)
-
-      view.drawing_color = 'black'
-      exclamation = [
-        Geom::Point3d.new(leader_length + 8,  6, 0),
-        Geom::Point3d.new(leader_length + 8,  4, 0),
-        Geom::Point3d.new(leader_length + 8,  2, 0),
-        Geom::Point3d.new(leader_length + 8, -3, 0)
-      ]
-      exclamation = adjust(exclamation, offset_vector, false)
-      view.draw2d(GL_LINES, exclamation)
-
-      nil
-    end
-
-
-    def draw2d_point_square(point, size, view)
-      half_size = size / 2.0
-      points = [
-        point.offset([-half_size, -half_size, 0]),
-        point.offset([ half_size, -half_size, 0]),
-        point.offset([ half_size,  half_size, 0]),
-        point.offset([-half_size,  half_size, 0])
-      ]
-      points = adjust(points, nil, false)
-      view.draw2d(GL_QUADS, points)
-    end
-
-
-    def adjust(points, offset_vector = nil, odd_offset_width = true)
-      if offset_vector && offset_vector.valid?
-        points = points.map { |point| point.offset(offset_vector) }
-      end
-      # Adjust to pixel grid.
-      points.map { |point|
-        point.x = point.x.to_i
-        point.y = point.y.to_i
-        point.z = point.z.to_i
-        if odd_offset_width
-          point.x -= 0.5
-          point.y -= 0.5
-          point.z -= 0.5
-        end
-        point
-      }
-    end
-
-
     def mid_point(edge)
       pt1, pt2 = edge.vertices.map { |vertex| vertex.position }
       Geom.linear_combination(0.5, pt1, 0.5, pt2)
     end
 
-
-    def screen_point(point, view)
-      point2d = view.screen_coords(point)
-      point2d.z = 0
-      point2d
-    end
 
   end # class InspectorTool
 end # module TT::Plugins::SolidInspector2
