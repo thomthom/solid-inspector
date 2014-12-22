@@ -36,7 +36,8 @@ module TT::Plugins::SolidInspector2
   require File.join(PATH, "inspector_tool.rb")
 
 
-  PATH_IMAGES = File.join(PATH, "images").freeze
+  PATH_IMAGES  = File.join(PATH, "images").freeze
+  PATH_GL_TEXT = File.join(PATH_IMAGES, "text").freeze
 
 
   ### MENU & TOOLBARS ### ------------------------------------------------------
@@ -112,7 +113,7 @@ module TT::Plugins::SolidInspector2
     load __FILE__
     # Supporting files
     if defined?(PATH) && File.exist?(PATH)
-      x = Dir.glob(File.join(PATH, "*.{rb,rbs}")).each { |file|
+      x = Dir.glob(File.join(PATH, "**/*.{rb,rbs}")).each { |file|
         load file
       }
       x.length + 1

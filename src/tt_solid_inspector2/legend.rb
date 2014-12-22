@@ -9,6 +9,7 @@
 module TT::Plugins::SolidInspector2
 
   require File.join(PATH, "drawing_helper.rb")
+  require File.join(PATH, "gl", "label.rb")
 
 
   class Legend
@@ -123,7 +124,17 @@ module TT::Plugins::SolidInspector2
     end
 
     def bounds(view)
-      @legends.first.bounds(view)
+      bounds = Geom::BoundingBox.new
+
+      legend_bounds = @legends.first.bounds(view)
+      bounds.add(legend_bounds)
+
+      text_width = (GL_Text::CHAR_WIDTH * @legends.size.to_s.size) + 25
+      point1 = legend_bounds.max
+      point2 = point1.offset(X_AXIS, text_width)
+      bounds.add(point2)
+
+      bounds
     end
 
     def draw(view)
@@ -134,8 +145,9 @@ module TT::Plugins::SolidInspector2
         pt1 = screen_position(view)
         pt2 = pt1.offset(leader_vector)
         text_pt = pt2.offset(X_AXIS, icon_size + 4)
-        text_pt.y -= 8
-        view.draw_text(text_pt, "#{@legends.size}")
+        text_pt = adjust_to_pixel_grid([text_pt])[0]
+        label = GL_Label.new(view, "#{@legends.size}", text_pt)
+        label.draw(view)
       end
     end
 
