@@ -336,7 +336,8 @@ module TT::Plugins::SolidInspector2
       edge = error.entities[0]
 
       leader_length = 15
-      pt1 = screen_point(mid_point(edge), view)
+      point = mid_point(edge).transform(@transformation)
+      pt1 = screen_point(point, view)
       pt2 = pt1.offset(X_AXIS, leader_length)
       offset_vector = ORIGIN.vector_to(pt1)
 
