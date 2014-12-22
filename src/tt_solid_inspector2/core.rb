@@ -31,6 +31,8 @@ module TT::Plugins::SolidInspector2
     @window.show
   else
 
+  require File.join(PATH, "debug.rb")
+  require File.join(PATH, "debug_tools.rb")
   require File.join(PATH, "inspector_tool.rb")
 
 
@@ -51,6 +53,13 @@ module TT::Plugins::SolidInspector2
 
     menu = UI.menu("Tools")
     menu.add_item(cmd_inspector)
+
+    if self.debug_mode?
+      debug_menu = menu.add_submenu("#{PLUGIN_NAME} Debug Tools")
+      debug_menu.add_item("Debug Reversed Faces") {
+        Sketchup.active_model.select_tool(DebugFaceReversedTool.new)
+      }
+    end
 
     toolbar = UI.toolbar(PLUGIN_NAME)
     toolbar.add_item(cmd_inspector)
