@@ -16,8 +16,17 @@ module TT::Plugins::SolidInspector2
     # @return [Sketchup::ComponentDefinition, Mixed]
     def self.definition(instance)
       if instance.respond_to?(:definition)
-        return instance.definition
-      elsif instance.is_a?(Sketchup::Group)
+        begin
+          return instance.definition
+        rescue
+          # Previously this was the first check, but too many extensions modify
+          # Sketchup::Group.definition with a method which is bugged so to avoid
+          # all the complaints about extensions not working due to this the call
+          # is trapped is a rescue block and any errors will make it fall back
+          # to using the old way of finding the group definition.
+        end
+      end
+      if instance.is_a?(Sketchup::Group)
         # (i) group.entities.parent should return the definition of a group.
         # But because of a SketchUp bug we must verify that
         # group.entities.parent returns the correct definition. If the returned
