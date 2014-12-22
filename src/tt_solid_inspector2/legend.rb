@@ -130,9 +130,9 @@ module TT::Plugins::SolidInspector2
       half_icon_size = icon_size / 2
 
       triangle = [
-        Geom::Point3d.new(leader_length,       8, 0),
-        Geom::Point3d.new(leader_length + 16,  8, 0),
-        Geom::Point3d.new(leader_length +  8, -8, 0)
+        Geom::Point3d.new(leader_length,       half_icon_size, 0),
+        Geom::Point3d.new(leader_length + icon_size,  half_icon_size, 0),
+        Geom::Point3d.new(leader_length +  half_icon_size, -half_icon_size, 0)
       ]
       triangle = offset_points(triangle, screen_position_vector(view))
       triangle = adjust_to_pixel_grid(triangle)
@@ -140,10 +140,10 @@ module TT::Plugins::SolidInspector2
 
       view.drawing_color = EXCLAMATION_COLOR
       exclamation = [
-        Geom::Point3d.new(leader_length + 8,  6, 0),
-        Geom::Point3d.new(leader_length + 8,  4, 0),
-        Geom::Point3d.new(leader_length + 8,  2, 0),
-        Geom::Point3d.new(leader_length + 8, -3, 0)
+        Geom::Point3d.new(leader_length + half_icon_size,  half_icon_size - 2, 0),
+        Geom::Point3d.new(leader_length + half_icon_size,  half_icon_size - 4, 0),
+        Geom::Point3d.new(leader_length + half_icon_size,  half_icon_size - 6, 0),
+        Geom::Point3d.new(leader_length + half_icon_size, -half_icon_size + 5, 0)
       ]
       exclamation = offset_points(exclamation, screen_position_vector(view))
       exclamation = adjust_to_pixel_grid(exclamation)
