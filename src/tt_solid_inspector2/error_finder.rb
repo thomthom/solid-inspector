@@ -293,12 +293,13 @@ module TT::Plugins::SolidInspector2
           # If we previously found some oriented faces in the inner faces check
           # then use these in order to avoid doing more ray tracing.
           start_face = self.find_largest_faces(oriented_faces)
+          reversed = false
         end
 
-        processed = Set.new(reversed_faces)
-        x = self.find_reversed_faces(entity_set, start_face, reversed, processed) { |face|
-          #puts "> Found Reversed Face: #{face}"
-          errors << SolidErrors::ReversedFace.new(face)
+        x = self.find_reversed_faces(entity_set, start_face, reversed) { |face|
+          unless reversed_faces.include?(face)
+            errors << SolidErrors::ReversedFace.new(face)
+          end
         }
         #puts "Reversed Faces (Surface Search): #{reversed_faces.size}"
         #puts "Reversed Faces (Manifold Search): #{x.size}"
@@ -382,12 +383,12 @@ module TT::Plugins::SolidInspector2
 
     # @param [Set<Sketchup::Face>] faces Manifold surface faces.
     # @param [Sketchup::Face] faces Face to orient the surface by.
-    def self.find_reversed_faces(faces, start_face, start_reversed, processed = Set.new, &block)
+    def self.find_reversed_faces(faces, start_face, start_reversed, &block)
       #puts ""
       #puts "ErrorFinder.find_reversed_faces"
       #puts "> faces: #{faces.to_a}"
       #puts "> processed: #{processed.to_a}"
-      #processed = Set.new
+      processed = Set.new
       unless start_face.is_a?(Sketchup::Face)
         raise TypeError, "start_face must be Sketchup::Face: #{start_face.inspect}"
       end
