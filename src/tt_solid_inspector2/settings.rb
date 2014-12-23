@@ -28,6 +28,16 @@ module TT::Plugins::SolidInspector2
     end
 
 
+    @debug_legend_merge = self.read("DebugLegendMerge", false)
+    def self.debug_legend_merge?
+      @debug_legend_merge
+    end
+    def self.debug_legend_merge=(boolean)
+      @debug_legend_merge = boolean ? true : false
+      self.write("DebugLegendMerge", @debug_legend_merge)
+    end
+
+
     @detect_short_edges = self.read("DetectShortEdges", false)
     def self.detect_short_edges?
       @detect_short_edges

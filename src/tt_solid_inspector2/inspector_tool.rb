@@ -153,7 +153,7 @@ module TT::Plugins::SolidInspector2
         @screen_legends = merge_close_legends(@legends, view)
         @legend_time = Time.now - start_time
       end
-      if @legend_time
+      if Settings.debug_mode? && Settings.debug_legend_merge? && @legend_time
         view.draw_text([20, 20, 0], "Legend Merge: #{@legend_time}")
       end
       @screen_legends.each { |legend|
@@ -238,6 +238,18 @@ module TT::Plugins::SolidInspector2
       menu.set_validation_proc(item)  {
         Settings.detect_short_edges? ? MF_ENABLED : MF_GRAYED
       }
+
+      if Settings.debug_mode?
+        menu.add_separator
+
+        item = menu.add_item("Debug Legend Merge Performance") {
+          Settings.debug_legend_merge = !Settings.debug_legend_merge?
+          view.invalidate
+        }
+        menu.set_validation_proc(item)  {
+          Settings.debug_legend_merge? ? MF_CHECKED : MF_UNCHECKED
+        }
+      end
     end
 
 
