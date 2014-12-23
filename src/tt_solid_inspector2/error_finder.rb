@@ -289,6 +289,8 @@ module TT::Plugins::SolidInspector2
         if oriented_faces.empty?
           #puts "> Searching for start face for surface orientation..."
           start_face, reversed = self.find_start_face(entity_set, transformation)
+          #puts "  > Start Face: #{start_face.entityID}"
+          #puts "  > Reversed: #{reversed}"
         else
           # If we previously found some oriented faces in the inner faces check
           # then use these in order to avoid doing more ray tracing.
@@ -380,7 +382,7 @@ module TT::Plugins::SolidInspector2
     def self.find_start_face(faces, transformation)
       # We try to inspect the largest faces first in an attempt to avoid
       # precision issues that might occur with tiny faces.
-      sorted_faces = faces.sort { |a, b| a.area <=> b.area }
+      sorted_faces = faces.sort { |a, b| b.area <=> a.area }
       sorted_faces.each { |face|
         if self.face_outward?(face, transformation, true)
           return [face, false]
