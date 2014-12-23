@@ -38,13 +38,13 @@ module TT::Plugins::SolidInspector2
     end
 
 
-    @short_edge_threshold = self.read("ShortEdgeThreshold", 3.mm)
+    @short_edge_threshold = self.read("ShortEdgeThreshold", 3.mm).to_l
     def self.short_edge_threshold
       @short_edge_threshold
     end
     def self.short_edge_threshold=(length)
       @short_edge_threshold = length.to_l
-      self.write("ShortEdgeThreshold", @short_edge_threshold)
+      self.write("ShortEdgeThreshold", @short_edge_threshold.to_f)
     end
 
   end # module Settings
