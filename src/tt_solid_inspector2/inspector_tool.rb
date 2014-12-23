@@ -70,6 +70,16 @@ module TT::Plugins::SolidInspector2
     end
 
 
+    def onMouseMove(flags, x, y, view)
+      if @screen_legends
+        point = Geom::Point3d.new(x, y, 0)
+        legend = @screen_legends.find { |legend| legend.mouse_over?(point, view) }
+        view.tooltip = legend ? legend.tooltip : ""
+      end
+      nil
+    end
+
+
     def onLButtonUp(flags, x, y, view)
       ph = view.pick_helper
       ph.do_pick(x, y)
@@ -367,7 +377,9 @@ module TT::Plugins::SolidInspector2
       @legends = @errors.grep(SolidErrors::ShortEdge).map { |error|
         edge = error.entities[0]
         point = mid_point(edge).transform(@transformation)
-        WarningLegend.new(point)
+        legend = WarningLegend.new(point)
+        legend.tooltip = error.class.display_name
+        legend
       }
       @screen_legends = nil
     end

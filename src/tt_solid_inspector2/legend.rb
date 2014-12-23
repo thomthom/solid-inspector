@@ -19,10 +19,11 @@ module TT::Plugins::SolidInspector2
 
     LEADER_COLOR = Sketchup::Color.new(255, 153, 0)
 
-    attr :position
+    attr_accessor :position, :tooltip
 
     def initialize(position)
       @position = position
+      @tooltip = ""
     end
 
     # return [Geom::BoundingBox]
@@ -54,6 +55,10 @@ module TT::Plugins::SolidInspector2
     # return [Integer] Icon size in pixels
     def icon_size
       16
+    end
+
+    def mouse_over?(point2d, view)
+      bounds(view).contains?(point2d)
     end
 
     def on_screen?(view)
@@ -116,12 +121,16 @@ module TT::Plugins::SolidInspector2
 
     def initialize(legend)
       super(legend.position)
+      @unique_tooltips = {}
       @legends = []
       add_legend(legend)
     end
 
     def add_legend(legend)
       @legends << legend
+      @unique_tooltips[legend.tooltip] ||= 0
+      @unique_tooltips[legend.tooltip] += 1
+      nil
     end
 
     def bounds(view)
@@ -136,6 +145,14 @@ module TT::Plugins::SolidInspector2
       bounds.add(point2)
 
       bounds
+    end
+
+    def tooltip
+      string = ""
+      @unique_tooltips.each { |tooltip, num_legends|
+        string << "#{tooltip} (#{num_legends})\n"
+      }
+      string
     end
 
     def draw(view)
