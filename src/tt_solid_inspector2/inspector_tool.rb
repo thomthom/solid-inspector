@@ -122,6 +122,17 @@ module TT::Plugins::SolidInspector2
     end
 
 
+    if Sketchup.version.to_i < 15
+      def getMenu(menu)
+        context_menu(menu)
+      end
+    else
+      def getMenu(menu, flags, x, y, view)
+        context_menu(menu, flags, x, y, view)
+      end
+    end
+
+
     def draw(view)
       filtered_errors.each { |error|
         error.draw(view, @transformation)
@@ -178,17 +189,8 @@ module TT::Plugins::SolidInspector2
       @instance_path = instance_path
       @transformation = transformation
 
-      @legends = @errors.grep(SolidErrors::ShortEdge).map { |error|
-        edge = error.entities[0]
-        point = mid_point(edge).transform(@transformation)
-        WarningLegend.new(point)
-      }
-      @screen_legends = nil
-
-      # Push results to webdialog.
-      grouped_errors = group_errors(@errors)
-      #puts JSON.pretty_generate(grouped_errors)
-      @window.call("list_errors", grouped_errors)
+      update_webdialog
+      update_legends
       update_ui
       nil
     end
@@ -196,6 +198,36 @@ module TT::Plugins::SolidInspector2
 
     def deselect_tool
       Sketchup.active_model.select_tool(nil)
+    end
+
+
+    def context_menu(menu, flags = nil, x = nil, y = nil, view = nil)
+      view ||= Sketchup.active_model.active_view
+
+      item = menu.add_item("Detect Short Edges") {
+        Settings.detect_short_edges = !Settings.detect_short_edges?
+        reanalyze_short_edges
+        view.invalidate
+      }
+      menu.set_validation_proc(item)  {
+        Settings.detect_short_edges? ? MF_CHECKED : MF_UNCHECKED
+      }
+
+      # TODO: Move this into a slider in the WebDialog instead.
+      threshold = Settings.short_edge_threshold
+      item = menu.add_item("Short Edge Threshold: #{threshold}") {
+        prompts = ["Edge Length"]
+        defaults = [threshold]
+        result = UI.inputbox(prompts, defaults, "Short Edge Threshold")
+        if result
+          Settings.short_edge_threshold = result[0]
+          reanalyze_short_edges
+          view.invalidate
+        end
+      }
+      menu.set_validation_proc(item)  {
+        Settings.detect_short_edges? ? MF_ENABLED : MF_GRAYED
+      }
     end
 
 
@@ -315,6 +347,35 @@ module TT::Plugins::SolidInspector2
         groups[error.class][:errors] << error
       }
       groups
+    end
+
+
+    def reanalyze_short_edges
+      @errors.reject! { |error| error.is_a?(SolidErrors::ShortEdge) }
+      if Settings.detect_short_edges?
+        ErrorFinder.find_short_edges(@entities) { |edge|
+          @errors << SolidErrors::ShortEdge.new(edge)
+        }
+      end
+      update_legends
+      update_webdialog
+      nil
+    end
+
+
+    def update_legends
+      @legends = @errors.grep(SolidErrors::ShortEdge).map { |error|
+        edge = error.entities[0]
+        point = mid_point(edge).transform(@transformation)
+        WarningLegend.new(point)
+      }
+      @screen_legends = nil
+    end
+
+
+    def update_webdialog
+      grouped_errors = group_errors(@errors)
+      @window.call("list_errors", grouped_errors)
     end
 
 

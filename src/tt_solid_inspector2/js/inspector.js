@@ -66,18 +66,11 @@ $(document).ready(function() {
 });
 
 
-function list_errors(errors) {
-  // Clear old content.
-  $("#content").text("");
-
-  // List errors.
-  for (error_type in errors) {
-    var error_group = errors[error_type];
-    add_error_type(error_group);
-  }
+function update_ui() {
+  var $error_groups = $(".error-group");
 
   // Display friendly message is there are no errors.
-  if (Object.keys(errors).length == 0) {
+  if ($error_groups.length == 0) {
     var html = "\
       <div id='no-errors'>\
         No Errors<br>\
@@ -88,7 +81,33 @@ function list_errors(errors) {
   }
 
   // Enable/Disabled the "Fix All" button.
-  $("#fix-all").prop("disabled", Object.keys(errors).length == 0);
+  $("#fix-all").prop("disabled", $error_groups.length == 0);
+}
+
+
+function list_errors(errors) {
+  // Clear old content.
+  $("#content").text("");
+
+  for (error_type in errors) {
+    var error_group = errors[error_type];
+    add_error_type(error_group);
+  }
+
+  update_ui();
+}
+
+
+function update_errors(errors) {
+  for (error_type in errors) {
+    var error_group = errors[error_type];
+    if (error_group.errors.length > 0) {
+      update_error_type(error_group);
+    } else {
+      remove_error_type(error_group);
+    }
+  }
+  update_ui();
 }
 
 
@@ -104,6 +123,27 @@ function add_error_type(error_group) {
     <button class="fix">Fix</button>\
   </div>';
   var $group = $(html);
+  $group.addClass(error_group.type);
   $group.data("type", error_group.type);
   $("#content").append($group);
+}
+
+
+function remove_error_type(error_group) {
+  var klass = "." + error_group.type;
+  var $group = $(klass);
+  $group.detach();
+}
+
+
+function update_error_type(error_group) {
+  var klass = "." + error_group.type;
+  var $group = $(klass);
+  if ($group.length > 0) {
+    add_error_type(error_group)
+  } else {
+    $group.children(".title").text(error_group.name);
+    $group.children(".count").text(error_group.errors.length);
+    $group.children(".description").text(error_group.description);
+  }
 }

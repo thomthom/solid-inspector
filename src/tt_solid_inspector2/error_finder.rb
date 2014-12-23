@@ -18,7 +18,7 @@ module TT::Plugins::SolidInspector2
     def self.find_errors(entities, transformation, debug = false)
       raise TypeError unless entities.is_a?(Sketchup::Entities)
 
-      if PLUGIN.debug_mode?
+      if Settings.debug_mode?
         puts ""
         puts "ErrorFinder.find_errors"
       end
@@ -152,7 +152,7 @@ module TT::Plugins::SolidInspector2
           end
         }
         elapsed_time = Time.now - start_time
-        if PLUGIN.debug_mode?
+        if Settings.debug_mode?
           puts "> Finding external faces by ray tracing took: #{elapsed_time}s"
         end
 
@@ -237,7 +237,7 @@ module TT::Plugins::SolidInspector2
         end
 
         elapsed_time = Time.now - start_time
-        if PLUGIN.debug_mode?
+        if Settings.debug_mode?
           puts "> Iteratively searching for internal faces took: #{elapsed_time}s"
         end
 
@@ -305,7 +305,7 @@ module TT::Plugins::SolidInspector2
         #puts "Reversed Faces (Manifold Search): #{x.size}"
 
         elapsed_time = Time.now - start_time
-        if PLUGIN.debug_mode?
+        if Settings.debug_mode?
           puts "> Reversed face detection took: #{elapsed_time}s"
         end
       end
@@ -320,7 +320,7 @@ module TT::Plugins::SolidInspector2
         errors << SolidErrors::NestedInstance.new(instance)
       }
       elapsed_time = Time.now - start_time
-      if PLUGIN.debug_mode?
+      if Settings.debug_mode?
         puts "> Instance detection took: #{elapsed_time}s"
       end
 
@@ -331,33 +331,44 @@ module TT::Plugins::SolidInspector2
         errors << SolidErrors::ImageEntity.new(image)
       }
       elapsed_time = Time.now - start_time
-      if PLUGIN.debug_mode?
+      if Settings.debug_mode?
         puts "> Image detection took: #{elapsed_time}s"
       end
 
 
       # Detect small edges.
-      start_time = Time.new
-      entities.grep(Sketchup::Edge) { |edge|
-        if edge.length < 3.mm
+      if Settings.detect_short_edges?
+        start_time = Time.new
+        self.find_short_edges(entities) { |edge|
           errors << SolidErrors::ShortEdge.new(edge)
+        }
+        elapsed_time = Time.now - start_time
+        if Settings.debug_mode?
+          puts "> Short edge detection took: #{elapsed_time}s"
         end
-      }
-      elapsed_time = Time.now - start_time
-      if PLUGIN.debug_mode?
-        puts "> Short edge detection took: #{elapsed_time}s"
       end
 
 
       Sketchup.status_text = ""
 
       elapsed_time = Time.now - total_start_time
-      if PLUGIN.debug_mode?
+      if Settings.debug_mode?
         puts "> Total analysis took: #{elapsed_time}s"
         puts ""
       end
 
       errors
+    end
+
+
+    def self.find_short_edges(entities, &block)
+      threshold = Settings.short_edge_threshold
+      entities.grep(Sketchup::Edge) { |edge|
+        if edge.length < threshold
+          block.call(edge)
+        end
+      }
+      nil
     end
 
 
