@@ -23,8 +23,10 @@ module TT
   PLUGIN_VERSION  = "2.0.0".freeze
 
   # Resource paths
-  FILENAMESPACE = File.basename(__FILE__, ".*")
-  PATH_ROOT     = File.dirname(__FILE__).freeze
+  file = __FILE__.dup
+  file.force_encoding("UTF-8") if file.respond_to?(:force_encoding)
+  FILENAMESPACE = File.basename(file, ".*")
+  PATH_ROOT     = File.dirname(file).freeze
   PATH          = File.join(PATH_ROOT, FILENAMESPACE).freeze
 
 
