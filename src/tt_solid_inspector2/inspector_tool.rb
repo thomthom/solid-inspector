@@ -82,6 +82,26 @@ module TT::Plugins::SolidInspector2
 
 
     def onLButtonUp(flags, x, y, view)
+      # Allow errors to be selected by clicking the legends.
+      if @screen_legends
+        point = Geom::Point3d.new(x, y, 0)
+        legend = @screen_legends.find { |legend| legend.mouse_over?(point, view) }
+        if legend
+          if legend.is_a?(LegendGroup)
+            error = legend.legends.first.error
+          else
+            legend.error
+          end
+          index = filtered_errors.find_index(error)
+          if index
+            @current_error = index
+            view.invalidate
+            return nil
+          end
+        end
+      end
+
+      # Pick a new instance to inspect.
       ph = view.pick_helper
       ph.do_pick(x, y)
       view.model.selection.clear
@@ -443,8 +463,7 @@ module TT::Plugins::SolidInspector2
 
     def update_legends
       @legends = @errors.grep(SolidErrors::ShortEdge).map { |error|
-        edge = error.entities[0]
-        ShortEdgeLegend.new(edge, @transformation)
+        ShortEdgeLegend.new(error, @transformation)
       }
       @screen_legends = nil
     end

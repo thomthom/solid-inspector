@@ -122,6 +122,8 @@ module TT::Plugins::SolidInspector2
   # the handling needs to change.
   class LegendGroup < Legend
 
+    attr_reader :legends
+
     def initialize(legend)
       super(legend.position)
       @legends = []
@@ -231,11 +233,13 @@ module TT::Plugins::SolidInspector2
   class ShortEdgeLegend < WarningLegend
 
     attr_reader :edge
+    attr_reader :error
 
-    def initialize(edge, transformation)
+    def initialize(error, transformation)
+      @error = error
+      @edge = error.entities[0]
       point = Geometry.mid_point(edge).transform(transformation)
       super(point)
-      @edge = edge
     end
 
     def tooltip
