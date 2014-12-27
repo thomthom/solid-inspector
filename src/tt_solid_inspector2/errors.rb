@@ -54,6 +54,7 @@ module TT::Plugins::SolidInspector2
         @fixed ? true : false
       end
 
+      # TODO: This should be a class property.
       def fixable?
         is_a?(Fixable)
       end

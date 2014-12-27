@@ -112,6 +112,7 @@ function update_errors(errors) {
 
 
 function add_error_type(error_group) {
+  var fix_button_label = (error_group.fixable) ? "Fix" : "Info"
   html = '\
   <div class="error-group">\
     <div class="title">' + error_group.name + '</div>\
@@ -120,7 +121,7 @@ function add_error_type(error_group) {
     </a>\
     <div class="count">' + error_group.errors.length + '</div>\
     <div class="description">' + error_group.description + '</div>\
-    <button class="fix">Fix</button>\
+    <button class="fix">' + fix_button_label + '</button>\
   </div>';
   var $group = $(html);
   $group.addClass(error_group.type);

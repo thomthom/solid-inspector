@@ -363,6 +363,7 @@ module TT::Plugins::SolidInspector2
             :type        => error.class.type_name,
             :name        => error.class.display_name,
             :description => error.class.description,
+            :fixable     => error.fixable?,
             :errors      => []
           }
         end
