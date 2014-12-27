@@ -83,7 +83,7 @@ module TT::Plugins::SolidInspector2
   REASON_REACTIVATE = 1
   REASON_UNDO = 2
 
-  # Constants for View.draw_points
+  # Constants for Sketchup::View.draw_points
   DRAW_OPEN_SQUARE     = 1
   DRAW_FILLED_SQUARE   = 2
   DRAW_PLUS            = 3
@@ -91,6 +91,16 @@ module TT::Plugins::SolidInspector2
   DRAW_STAR            = 5
   DRAW_OPEN_TRIANGLE   = 6
   DRAW_FILLED_TRIANGLE = 7
+
+  # Constants for Geom::BoundingBox.corner
+  BB_LEFT_FRONT_BOTTOM  = 0
+  BB_RIGHT_FRONT_BOTTOM = 1
+  BB_LEFT_BACK_BOTTOM   = 2
+  BB_RIGHT_BACK_BOTTOM  = 3
+  BB_LEFT_FRONT_TOP     = 4
+  BB_RIGHT_FRONT_TOP    = 5
+  BB_LEFT_BACK_TOP      = 6
+  BB_RIGHT_BACK_TOP     = 7
 
 
   def self.inspect_solid

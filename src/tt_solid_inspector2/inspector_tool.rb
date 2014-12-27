@@ -11,6 +11,7 @@ require "set"
 module TT::Plugins::SolidInspector2
 
   require File.join(PATH, "error_finder.rb")
+  require File.join(PATH, "geometry.rb")
   require File.join(PATH, "inspector_window.rb")
   require File.join(PATH, "instance.rb")
   require File.join(PATH, "key_codes.rb")
@@ -103,23 +104,37 @@ module TT::Plugins::SolidInspector2
       errors = filtered_errors
 
       if key == KEY_TAB
-        if shift
-          @current_error = (@current_error - 1) % errors.size
+        if @current_error.nil?
+          @current_error = 0
+        else
+          if shift
+            @current_error = (@current_error - 1) % errors.size
+          else
+            @current_error = (@current_error + 1) % errors.size
+          end
+        end
+      end
+
+      if key == VK_UP || key == VK_RIGHT
+        if @current_error.nil?
+          @current_error = 0
         else
           @current_error = (@current_error + 1) % errors.size
         end
       end
 
-      if key == VK_UP || key == VK_RIGHT
-        @current_error = (@current_error + 1) % errors.size
-      end
-
       if key == VK_DOWN || key == VK_LEFT
-        @current_error = (@current_error - 1) % errors.size
+        if @current_error.nil?
+          @current_error = 0
+        else
+          @current_error = (@current_error - 1) % errors.size
+        end
       end
 
       if key == KEY_RETURN || key == KEY_TAB
-        zoom_to_error(view)
+        unless @current_error.nil?
+          zoom_to_error(view)
+        end
       end
 
       if key == KEY_ESCAPE
@@ -147,6 +162,8 @@ module TT::Plugins::SolidInspector2
       filtered_errors.each { |error|
         error.draw(view, @transformation)
       }
+
+      draw_circle_around_current_error(view)
 
       if @screen_legends.nil?
         start_time = Time.now
@@ -193,7 +210,7 @@ module TT::Plugins::SolidInspector2
       #puts "> Transformation: #{transformation.to_a}"
 
       @filtered_errors = nil
-      @current_error = 0
+      @current_error = nil
       @errors = ErrorFinder.find_errors(entities, transformation)
       @entities = entities
       @instance_path = instance_path
@@ -286,6 +303,44 @@ module TT::Plugins::SolidInspector2
     end
 
 
+    def draw_circle_around_current_error(view)
+      return false if @current_error.nil?
+      return false if filtered_errors.empty?
+
+      error = filtered_errors[@current_error]
+
+      vertices = Set.new
+      error.entities.each { |entity|
+        if entity.respond_to?(:vertices)
+          vertices.merge(entity.vertices)
+        end
+      }
+
+      screen_points = vertices.to_a.map { |vertex|
+        point = view.screen_coords(vertex)
+        point.z = 0 # TODO: Share code with DrawingHelper.
+        point
+      }
+
+      bounds = Geom::BoundingBox.new
+      bounds.add(screen_points)
+
+      corner1 = bounds.corner(BB_LEFT_FRONT_BOTTOM)
+      corner2 = bounds.corner(BB_RIGHT_BACK_TOP)
+      diameter = corner1.distance(corner2)
+      diameter = [diameter, 20].max
+      radius = diameter / 2
+      segments = 64
+      circle = Geometry.circle2d(bounds.center, X_AXIS, radius, segments)
+
+      view.line_stipple = ''
+      view.line_width = 2
+      view.drawing_color = SolidErrors::SolidError::ERROR_COLOR_EDGE
+      view.draw2d(GL_LINE_LOOP, circle)
+      true
+    end
+
+
     def forward_key(method, jquery_event)
       key = jquery_event["key"]
       repeat = false
@@ -350,7 +405,7 @@ module TT::Plugins::SolidInspector2
         klass = SolidErrors.const_get(type)
         @filtered_errors = klass
       end
-      @current_error = 0
+      @current_error = nil
       nil
     end
 
@@ -435,6 +490,8 @@ module TT::Plugins::SolidInspector2
       target = camera.target.transform(tr)
       up = camera.up.transform(tr)
       view.camera.set(eye, target, up)
+
+      @screen_legends = nil
       nil
     end
 
