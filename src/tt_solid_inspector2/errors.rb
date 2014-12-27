@@ -400,7 +400,8 @@ module TT::Plugins::SolidInspector2
       def self.description
         "Small geometry might cause unpredictable results due to precision "\
         "errors. It's beneficial to try to avoid such small geometry. This "\
-        "cannot be automatically fixed."
+        "cannot be automatically fixed. You might want to scale the model up "\
+        "by factors of 10 to work around such problems."
       end
 
       def draw(view, transformation = nil)
