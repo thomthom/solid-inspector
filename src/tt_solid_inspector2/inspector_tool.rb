@@ -337,9 +337,10 @@ module TT::Plugins::SolidInspector2
       }
 
       screen_points = vertices.to_a.map { |vertex|
-        point = view.screen_coords(vertex)
-        point.z = 0 # TODO: Share code with DrawingHelper.
-        point
+        world_point = vertex.position.transform(@transformation)
+        screen_point = view.screen_coords(world_point)
+        screen_point.z = 0 # TODO: Share code with DrawingHelper.
+        screen_point
       }
 
       bounds = Geom::BoundingBox.new
