@@ -250,6 +250,67 @@ module TT::Plugins::SolidInspector2
 
     def context_menu(menu, flags = nil, x = nil, y = nil, view = nil)
       view ||= Sketchup.active_model.active_view
+      can_select = @entities == view.model.active_entities
+
+      message = "Only entities in the active context can be selected. Please "\
+        "open the group or component you are inspecting to be able to select "\
+        "entities."
+
+      # Select Legend Entities
+
+      if @screen_legends && x && y
+        point = Geom::Point3d.new(x, y, 0)
+        legend = @screen_legends.find { |legend| legend.mouse_over?(point, view) }
+        if legend
+          return UI.messagebox(message) unless can_select
+          menu.add_item("Select Entities") {
+            entities = Set.new
+            if legend.is_a?(LegendGroup)
+              legend.legends.each { |legend|
+                entities.merge(legend.error.entities)
+              }
+            else
+              entities.merge(legend.error.entities)
+            end
+            view.model.selection.clear
+            view.model.selection.add(entities.to_a)
+            view.invalidate
+          }
+          # Return true to suppress the native context menu.
+          return true
+        end
+      end
+
+      # Select
+
+      if @errors.size > 0
+        menu.add_item("Select Entities from All Errors") {
+          return UI.messagebox(message) unless can_select
+          entities = Set.new
+          @errors.each { |error| entities.merge(error.entities) }
+          view.model.selection.clear
+          view.model.selection.add(entities.to_a)
+          view.invalidate
+        }
+      end
+
+      groups = group_errors(@errors)
+      if groups.size > 0
+        groups.each { |klass, data|
+          menu.add_item("Select #{klass.display_name}") {
+            return UI.messagebox(message) unless can_select
+            entities = Set.new
+            data[:errors].each { |error| entities.merge(error.entities) }
+            view.model.selection.clear
+            view.model.selection.add(entities.to_a)
+            view.invalidate
+          }
+        }
+      end
+
+      # Short Edges
+
+      menu.add_separator if @errors.size > 0
 
       item = menu.add_item("Detect Short Edges") {
         Settings.detect_short_edges = !Settings.detect_short_edges?
@@ -276,6 +337,8 @@ module TT::Plugins::SolidInspector2
         Settings.detect_short_edges? ? MF_ENABLED : MF_GRAYED
       }
 
+      # Debug
+
       if Settings.debug_mode?
         menu.add_separator
 
@@ -287,6 +350,9 @@ module TT::Plugins::SolidInspector2
           Settings.debug_legend_merge? ? MF_CHECKED : MF_UNCHECKED
         }
       end
+
+      # Return true to suppress the native context menu.
+      true
     end
 
 
