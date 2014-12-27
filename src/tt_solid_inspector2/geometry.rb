@@ -108,5 +108,14 @@ module TT::Plugins::SolidInspector2
     return segments
   end
 
+
+  # @param [Sketchup::Edge] edge
+  #
+  # @return [Geom::Point3d]
+  def self.mid_point(edge)
+    pt1, pt2 = edge.vertices.map { |vertex| vertex.position }
+    Geom.linear_combination(0.5, pt1, 0.5, pt2)
+  end
+
   end # module Geometry
 end # module TT::Plugins::SolidInspector2

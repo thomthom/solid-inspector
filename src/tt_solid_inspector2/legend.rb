@@ -9,6 +9,7 @@
 module TT::Plugins::SolidInspector2
 
   require File.join(PATH, "drawing_helper.rb")
+  require File.join(PATH, "geometry.rb")
   require File.join(PATH, "gl", "label.rb")
   require File.join(PATH, "gl", "text.rb")
 
@@ -117,19 +118,18 @@ module TT::Plugins::SolidInspector2
   end # class Legend
 
 
+  # This currently assumes all legends are ShortEdgeLegends. If adding new ones
+  # the handling needs to change.
   class LegendGroup < Legend
 
     def initialize(legend)
       super(legend.position)
-      @unique_tooltips = {}
       @legends = []
       add_legend(legend)
     end
 
     def add_legend(legend)
       @legends << legend
-      @unique_tooltips[legend.tooltip] ||= 0
-      @unique_tooltips[legend.tooltip] += 1
       nil
     end
 
@@ -148,11 +148,18 @@ module TT::Plugins::SolidInspector2
     end
 
     def tooltip
-      string = ""
-      @unique_tooltips.each { |tooltip, num_legends|
-        string << "#{tooltip} (#{num_legends})\n"
-      }
-      string
+      return @legends[0].tooltip if @legends.size == 1
+      lengths = @legends.map { |legend| legend.edge.length }
+      min = lengths.min
+      max = lengths.max
+      # Compare by string and not length to account for model unit precision.
+      # We want a range to be displayed only if the range can be expressed with
+      # the current model unit precision.
+      if min.to_s == max.to_s
+        "Short Edges (#{min})"
+      else
+        "Short Edges (#{min}–#{max})"
+      end
     end
 
     def draw(view)
@@ -219,6 +226,24 @@ module TT::Plugins::SolidInspector2
     end
 
   end # class Warning
+
+
+  class ShortEdgeLegend < WarningLegend
+
+    attr_reader :edge
+
+    def initialize(edge, transformation)
+      point = Geometry.mid_point(edge).transform(transformation)
+      super(point)
+      @edge = edge
+    end
+
+    def tooltip
+      return "" if @edge.deleted?
+      "Short Edge (#{@edge.length})"
+    end
+
+  end # class ShortEdgeLegend
 
 
 end # module TT::Plugins::SolidInspector2

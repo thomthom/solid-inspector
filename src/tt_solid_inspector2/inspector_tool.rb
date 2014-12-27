@@ -444,10 +444,7 @@ module TT::Plugins::SolidInspector2
     def update_legends
       @legends = @errors.grep(SolidErrors::ShortEdge).map { |error|
         edge = error.entities[0]
-        point = mid_point(edge).transform(@transformation)
-        legend = WarningLegend.new(point)
-        legend.tooltip = error.class.display_name
-        legend
+        ShortEdgeLegend.new(edge, @transformation)
       }
       @screen_legends = nil
     end
@@ -493,12 +490,6 @@ module TT::Plugins::SolidInspector2
 
       @screen_legends = nil
       nil
-    end
-
-
-    def mid_point(edge)
-      pt1, pt2 = edge.vertices.map { |vertex| vertex.position }
-      Geom.linear_combination(0.5, pt1, 0.5, pt2)
     end
 
 
