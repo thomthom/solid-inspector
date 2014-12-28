@@ -2,7 +2,7 @@
 
 
 function error_report(report) {
-  $("#report").text(report);
+  $("#report").text("```text\n" + report.trim() + "\n```");
 }
 
 
@@ -14,7 +14,7 @@ $(document).ready(function() {
   });
 
   $("#send-report").on("click", function() {
-    var text_report = "```text\n" + $("#report").text() + "\n```";
+    var text_report = $("#report").text();
     try {
       window.clipboardData.setData("Text", text_report);
     } catch(error) {

@@ -96,7 +96,7 @@ function disable_select() {
  */
 function disable_context_menu() {
   $(document).on('contextmenu', function(e) {
-    return $(e.target).is('input[type=text], input[type=email], input[type=password], textarea');
+    return $(e.target).is('input[type=text], input[type=email], input[type=password], textarea, .selectable');
   });
 }
 
