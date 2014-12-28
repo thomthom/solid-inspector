@@ -10,3 +10,6 @@ Thumbs.db
 *.skb
 Backup of *.layout
 *.rbz
+
+# Folders
+Research/
