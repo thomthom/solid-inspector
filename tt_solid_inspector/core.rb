@@ -30,8 +30,11 @@ end
 
 if defined?( TT::Lib ) && TT::Lib.compatible?( '2.7.0', 'Solid Inspector' )
 
-module TT::Plugins::SolidInspector 
-  
+module TT::Plugins::SolidInspector
+
+  require File.join( PATH, "upgrade.rb" )
+
+
   ### MENU & TOOLBARS ### ------------------------------------------------------
 
   unless file_loaded?( __FILE__ )
@@ -40,28 +43,28 @@ module TT::Plugins::SolidInspector
 
     file_loaded( __FILE__ )
   end
-  
-  
+
+
   ### MAIN SCRIPT ### ----------------------------------------------------------
 
   # @since 1.0.0
   def self.inspect_solid
     Sketchup.active_model.tools.push_tool( SolidInspector.new )
   end
-  
-  
+
+
   # @since 1.0.0
   class SolidInspector
-    
+
     # @since 1.0.0
     def initialize
       @instance = nil
       @errors = []
       @current_error = 0
       @groups = []
-      
+
       @status = "Click on solids to inspect. Use arrow keys to cycle between errors. Press Return to zoom to error. Press Tab/Shift+Tab to cycle though errors and zoom."
-      
+
       if Sketchup.active_model.selection.empty?
         analyze( nil )
       else
@@ -72,11 +75,11 @@ module TT::Plugins::SolidInspector
         }
       end
     end
-    
+
     # @since 1.0.0
     def analyze(instance)
       @instance = instance
-      
+
       if @instance
         Sketchup.active_model.selection.clear
         Sketchup.active_model.selection.add( @instance )
@@ -86,54 +89,54 @@ module TT::Plugins::SolidInspector
         entities = Sketchup.active_model.active_entities
         @transformation = Geom::Transformation.new()
       end
-      
+
       # Any edge without two faces means an error in the surface of the solid.
       @current_error = 0
       @errors = entities.select { |e|
         e.is_a?( Sketchup::Edge ) && e.faces.length != 2
       }
-      
+
       # Group connected error-edges.
       @groups = []
       stack = @errors.clone
       until stack.empty?
         cluster = []
         cluster << stack.shift
-        
+
         # Find connected errors
         edge = cluster.first
         haystack = ([edge.start.edges + edge.end.edges] - [edge]).first & stack
         until haystack.empty?
           e = haystack.shift
-          
+
           if stack.include?( e )
             cluster << e
             stack.delete( e )
-            haystack += ([e.start.edges + e.end.edges] - [e]).first & stack 
+            haystack += ([e.start.edges + e.end.edges] - [e]).first & stack
           end
         end
-        
+
         @groups << cluster
       end
     end
-    
+
     # @since 1.0.0
     def activate
       Sketchup.active_model.active_view.invalidate
       Sketchup.status_text = @status
     end
-    
+
     # @since 1.0.0
     def deactivate(view)
       view.invalidate
     end
-    
+
     # @since 1.0.0
     def resume(view)
       view.invalidate
       Sketchup.status_text = @status
     end
-    
+
     # @since 1.0.0
     def onLButtonUp(flags, x, y, view)
       ph = view.pick_helper
@@ -147,12 +150,12 @@ module TT::Plugins::SolidInspector
     # @since 1.0.0
     def onKeyUp(key, repeat, flags, view)
       return if @groups.empty?
-      
+
       shift = flags & CONSTRAIN_MODIFIER_MASK == CONSTRAIN_MODIFIER_MASK
-      
+
       # Iterate over the error found using Tab, Up/Down, Left/Right.
       # Tab will zoom to the current error.
-      
+
       if key == 9 # Tab
         if shift
           @current_error = (@current_error - 1) % @groups.length
@@ -160,23 +163,23 @@ module TT::Plugins::SolidInspector
           @current_error = (@current_error + 1) % @groups.length
         end
       end
-      
+
       if key == VK_UP || key == VK_RIGHT
         @current_error = (@current_error + 1) % @groups.length
       end
-      
+
       if key == VK_DOWN || key == VK_LEFT
         @current_error = (@current_error - 1) % @groups.length
       end
-      
+
       if key == 13 || key == 9
         zoom_to_error(view)
       end
-      
+
       #p key
       view.invalidate
     end
-    
+
     # @since 1.0.0
     def zoom_to_error(view)
       e = @groups[ @current_error ]
@@ -189,24 +192,24 @@ module TT::Plugins::SolidInspector
       up = camera.up.transform( t )
       view.camera.set( eye, target, up )
     end
-    
+
     # @since 1.0.0
     def draw(view)
       view.line_width = 3
       view.line_stipple = ''
-        
+
       unless @groups.empty?
         @groups.each_index { |index|
           error = @groups[index]
-          
+
           view.drawing_color = (index == @current_error) ? 'red' : 'orange'
-          
+
           # Get points for each error edge
           pts = error.map { |e| e.vertices.map{|v|v.position} }.flatten
           pts.map! { |pt| pt.transform( @transformation ) }
-          
+
           view.draw(GL_LINES, pts)
-          
+
           # Draw Attention Circle
           pts2d = pts.map { |pt| view.screen_coords(pt) }
 
@@ -214,18 +217,18 @@ module TT::Plugins::SolidInspector
           bb.add( pts2d )
           size = bb.corner(0).distance( bb.corner(7) )
           size = 20 if size < 20 # Ensure a minimum size of the circle
-          
+
           c = TT::Geom3d.circle( bb.center, Z_AXIS, size, 64 )
           view.draw2d( GL_LINE_LOOP, c )
         }
       end
     end
-    
+
   end # class SolidInspector
 
-  
-  ### DEBUG ### ------------------------------------------------------------  
-  
+
+  ### DEBUG ### ------------------------------------------------------------
+
   # @note Debug method to reload the plugin.
   #
   # @example
@@ -253,7 +256,7 @@ module TT::Plugins::SolidInspector
   ensure
     $VERBOSE = original_verbose
   end
-  
+
 end # module
 
 end # if TT_Lib
