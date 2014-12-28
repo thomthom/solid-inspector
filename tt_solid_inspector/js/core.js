@@ -182,7 +182,8 @@ function can_open_extension_warehouse() {
   if ( match ) {
     var version = parseFloat(match[1]);
     var os      = match[2];
-    if ( version >= 13.0 ) {
+    // Bug under OSX prevents EW from working with unicode characters.
+    if ( version >= 13.0 && os == "PC" ) {
       return true;
     }
   }
