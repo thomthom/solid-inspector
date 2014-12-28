@@ -10,8 +10,6 @@
 module TT::Plugins::SolidInspector2
   if Sketchup.version.to_i < 14
     require File.join(PATH, "compatibility.rb")
-    @window = CompatibilityWarning.new(@extension)
-    @window.show
   else
 
   require File.join(PATH, "debug_tools.rb")

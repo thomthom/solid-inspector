@@ -25,8 +25,19 @@ module TT::Plugins::SolidInspector2
 
       # Because this might run on older SketchUp with Ruby 1.8 and no StdLib we
       # must avoid using the JSON lib and do special handling of the callbacks.
-      add_action_callback("callback") {|dialog, params|
-        dialog.close if params == "close_window"
+      add_action_callback("callback") { |dialog, params|
+        case params
+        when "html_ready"
+          # Ignore.
+        when "close_window"
+          dialog.close
+        else
+          warn "Unknown callback: #{callback}"
+        end
+      }
+      add_action_callback("open_extension_warehouse") { |dialog, params|
+        UI.openURL("http://extensions.sketchup.com/content/solid-inspector")
+        dialog.close
       }
 
       self.min_width = options[:width]
@@ -52,5 +63,9 @@ module TT::Plugins::SolidInspector2
     end
 
   end # class
+
+
+  @window = CompatibilityWarning.new(@extension)
+  @window.show
 
 end # module TT::Plugins::SolidInspector2
