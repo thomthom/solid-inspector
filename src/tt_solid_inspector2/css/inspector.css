@@ -1,26 +1,5 @@
 /* Copyright 2014 Thomas Thomassen */
 
-#header {
-  font-size: 1.5em;
-  padding-left: 52px; /* 10px + 32px + 10px */
-  line-height: 32px;
-  background: #c33;
-  border-color: #a00;
-  color: #fff;
-}
-
-
-#header img {
-  position: absolute;
-  left: 10px;
-  top: 10px;
-}
-
-
-#content {
-  overflow: auto;
-}
-
 
 #no-errors {
   color: #999;

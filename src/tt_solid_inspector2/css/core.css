@@ -5,9 +5,14 @@
   cursor: inherit;
 }
 
-input, select, textarea, a[href]
+input, select, textarea, a[href], .selectable
 {
-  cursor: auto;
+  cursor: auto !important;
+}
+
+.selectable
+{
+  cursor: text !important;
 }
 
 html {
@@ -146,12 +151,20 @@ button:disabled:hover {
   right: 0;
   height: 32px; /* 10px + 32px + 10px == 52px */
   padding: 10px 10px;
-  /*color: #fff;
-  background: #900;
-  border-bottom: 10px solid #c00;*/
-  border-bottom: 5px solid #cccccc;
-  background: #eee;
+  padding-left: 52px; /* 10px + 32px + 10px */
+  border-bottom: 5px solid #a00;
+  background: #c33;
+  color: #fff;
   z-index: 100;
+  font-size: 1.5em;
+  line-height: 32px;
+}
+
+
+#header img {
+  position: absolute;
+  left: 10px;
+  top: 10px;
 }
 
 
@@ -163,6 +176,7 @@ button:disabled:hover {
   left: 0;
   right: 0;
   /*padding: 20px;*/
+  overflow: auto;
 }
 
 

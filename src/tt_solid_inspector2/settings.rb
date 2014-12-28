@@ -38,6 +38,16 @@ module TT::Plugins::SolidInspector2
     end
 
 
+    @debug_error_report = self.read("DebugErrorReport", false)
+    def self.debug_error_report?
+      @debug_error_report
+    end
+    def self.debug_error_report=(boolean)
+      @debug_error_report = boolean ? true : false
+      self.write("DebugErrorReport", @debug_error_report)
+    end
+
+
     @detect_short_edges = self.read("DetectShortEdges", false)
     def self.detect_short_edges?
       @detect_short_edges

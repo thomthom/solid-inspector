@@ -35,6 +35,7 @@ $(document).ready(function() {
   create_bridge();
   disable_context_menu();
   disable_select();
+  hook_up_close_button();
   hook_up_default_button();
 
   callback("html_ready");
@@ -73,12 +74,19 @@ function hook_up_default_button() {
 }
 
 
+function hook_up_close_button() {
+  $("#close").on("click", function() {
+    callback("close_window");
+  });
+}
+
+
 /* Disables text selection on elements other than input type elements where
  * it makes sense to allow selections. This mimics native windows.
  */
 function disable_select() {
   $(document).on('mousedown selectstart', function(e) {
-    return $(e.target).is('input, textarea, select, option');
+    return $(e.target).is('input, textarea, select, option, .selectable');
   });
 }
 

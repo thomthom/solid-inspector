@@ -44,7 +44,7 @@ module TT::Plugins::SolidInspector2
         #p data
       }
 
-      html_file = File.join(PATH, "html", "inspector.html")
+      html_file = File.join(PATH_HTML, "inspector.html")
       set_file(html_file)
     end
 

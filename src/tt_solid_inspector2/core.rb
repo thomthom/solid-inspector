@@ -32,12 +32,14 @@ module TT::Plugins::SolidInspector2
   else
 
   require File.join(PATH, "debug_tools.rb")
+  require File.join(PATH, "error_window.rb")
   require File.join(PATH, "inspector_tool.rb")
   require File.join(PATH, "settings.rb")
 
 
   PATH_IMAGES  = File.join(PATH, "images").freeze
   PATH_GL_TEXT = File.join(PATH_IMAGES, "text").freeze
+  PATH_HTML    = File.join(PATH, "html").freeze
 
 
   ### MENU & TOOLBARS ### ------------------------------------------------------
@@ -57,8 +59,18 @@ module TT::Plugins::SolidInspector2
 
     if Settings.debug_mode?
       debug_menu = menu.add_submenu("#{PLUGIN_NAME} Debug Tools")
+
       debug_menu.add_item("Debug Reversed Faces") {
         Sketchup.active_model.select_tool(DebugFaceReversedTool.new)
+      }
+
+      debug_menu.add_item("Error Dialog") {
+        begin
+          2 / 0
+        rescue => error
+          @error_window = ErrorWindow.new(error)
+          @error_window.show
+        end
       }
     end
 
