@@ -22,7 +22,7 @@ module TT::Plugins::SolidInspector2
       height = (Sketchup.platform == :platform_osx) ? 420 : 490
       options = {
         :dialog_title    => PLUGIN_NAME,
-        :preferences_key => "#{PLUGIN_ID}_#{class_name}5",
+        :preferences_key => "#{PLUGIN_ID}_#{class_name}",
         :scrollable      => false,
         :resizable       => true,
         :width           => 400,
