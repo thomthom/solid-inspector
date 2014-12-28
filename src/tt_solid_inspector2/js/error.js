@@ -8,6 +8,11 @@ function error_report(report) {
 
 $(document).ready(function() {
 
+  $("#report").on("click", function() {
+    var element = $("#report").get(0);
+    select_element_text(element);
+  });
+
   $("#send-report").on("click", function() {
     var text_report = "```text\n" + $("#report").text() + "\n```";
     try {

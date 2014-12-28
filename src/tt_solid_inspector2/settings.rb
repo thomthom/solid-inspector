@@ -18,6 +18,7 @@ module TT::Plugins::SolidInspector2
     end
 
 
+    # TT::Plugins::SolidInspector2::Settings.debug_mode = true
     @debug_mode = self.read("DebugMode", false)
     def self.debug_mode?
       @debug_mode
