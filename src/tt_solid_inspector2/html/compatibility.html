@@ -6,21 +6,48 @@
 
   <link rel="stylesheet" type="text/css" href="../css/core.css" />
   <style>
-    body {
-      margin: 2em;
+    #content {
+      margin: 20px;
     }
   </style>
+
+  <script type="text/javascript" src="../js/third-party/jquery.js"></script>
+  <script type="text/javascript" src="../js/core.js"></script>
 </head>
 <body>
 
-<h1>Incompatible SketchUp Version</h1>
-<p>
-  Solid Inspector² require SketchUp 2014 or newer.
-</p>
-<p>
-  For older SketchUp versions please use
-  <a href='skp:launchEW@solid-inspector'>version 1</a>.
-</p>
+<!--[if lt IE 9]>
+  <div id="ie-warning" class="localize">
+  This extension requires IE9 or newer. Older versions are unsupported.
+  </div>
+<![endif]-->
+
+<div id="header">
+<img src="../images/Icon-32.png">
+  Incompatible SketchUp Version
+</div>
+
+<div id="content">
+
+  <div id="message"
+    <p>
+      Solid Inspector² require SketchUp 2014 or newer.
+    </p>
+    <p>
+      For older SketchUp versions please use
+      <a href='skp:launchEW@solid-inspector'>version 1</a>.
+    </p>
+  </div>
+
+</div>
+
+<div id="footer">
+
+  <button id="close" class="default">
+    <span class="localize">Close</span>
+  </button>
+
+</div>
 
 </body>
 </html>
