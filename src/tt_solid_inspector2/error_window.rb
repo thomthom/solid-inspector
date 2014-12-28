@@ -19,13 +19,14 @@ module TT::Plugins::SolidInspector2
     end
 
     def initialize(error)
+      height = (Sketchup.platform == :platform_osx) ? 420 : 490
       options = {
         :dialog_title    => PLUGIN_NAME,
-        :preferences_key => "#{PLUGIN_ID}_#{class_name}",
+        :preferences_key => "#{PLUGIN_ID}_#{class_name}5",
         :scrollable      => false,
         :resizable       => true,
         :width           => 400,
-        :height          => 490,
+        :height          => height,
         :left            => 200,
         :top             => 200
       }
