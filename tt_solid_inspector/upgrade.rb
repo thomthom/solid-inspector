@@ -34,6 +34,9 @@ module TT::Plugins::SolidInspector
           dialog.close
         when "install"
           dialog.close
+        when "installManually"
+          UI.openURL("http://extensions.sketchup.com/content/solid-inspector%C2%B2")
+          dialog.close
         else
           warn "Unknown callback: #{params}"
         end

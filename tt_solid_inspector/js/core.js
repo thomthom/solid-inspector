@@ -84,8 +84,12 @@ function hook_up_buttons() {
   });
 
   $("#install").on("click", function() {
-    window.location = "skp:launchEW@solid-inspector²";
-    callback("install");
+    if (can_open_extension_warehouse()) {
+      window.location = "skp:launchEW@solid-inspector²";
+      callback("install");
+    } else {
+      callback("installManually");
+    }
   });
 }
 
@@ -169,4 +173,18 @@ function select_element_text(el, win) {
     range.moveToElementText(el);
     range.select();
   }
+}
+
+
+function can_open_extension_warehouse() {
+  var pattern = /SketchUp\/(\d+\.\d+)\s\(([^)]+)\)/;
+  var match = pattern.exec(navigator.userAgent);
+  if ( match ) {
+    var version = parseFloat(match[1]);
+    var os      = match[2];
+    if ( version >= 13.0 ) {
+      return true;
+    }
+  }
+  return false
 }
