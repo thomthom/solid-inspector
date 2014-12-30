@@ -286,6 +286,13 @@ module TT::Plugins::SolidInspector2
         entity_set = Set.new(all_faces)
         entity_set.subtract(internal_faces)
 
+        if Settings.debug_mode? && Settings.debug_color_internal_faces?
+          internal_faces.each { |face|
+            face.material = "red"
+            face.back_material = "maroon"
+          }
+        end
+
         if oriented_faces.empty?
           #puts "> Searching for start face for surface orientation..."
           start_face, reversed = self.find_start_face(entity_set, transformation)
