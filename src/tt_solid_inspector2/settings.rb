@@ -49,6 +49,16 @@ module TT::Plugins::SolidInspector2
     end
 
 
+    @debug_color_internal_faces = self.read("DebugColorInternalFaces", false)
+    def self.debug_color_internal_faces?
+      @debug_color_internal_faces
+    end
+    def self.debug_color_internal_faces=(boolean)
+      @debug_color_internal_faces = boolean ? true : false
+      self.write("DebugColorInternalFaces", @debug_color_internal_faces)
+    end
+
+
     @detect_short_edges = self.read("DetectShortEdges", false)
     def self.detect_short_edges?
       @detect_short_edges

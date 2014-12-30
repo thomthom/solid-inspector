@@ -360,6 +360,14 @@ module TT::Plugins::SolidInspector2
         menu.set_validation_proc(item)  {
           Settings.debug_error_report? ? MF_CHECKED : MF_UNCHECKED
         }
+
+        item = menu.add_item("Debug Color Internal Face") {
+          Settings.debug_color_internal_faces = !Settings.debug_color_internal_faces?
+          view.invalidate
+        }
+        menu.set_validation_proc(item)  {
+          Settings.debug_color_internal_faces? ? MF_CHECKED : MF_UNCHECKED
+        }
       end
 
       # Return true to suppress the native context menu.

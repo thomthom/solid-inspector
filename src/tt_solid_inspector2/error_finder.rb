@@ -286,6 +286,13 @@ module TT::Plugins::SolidInspector2
         entity_set = Set.new(all_faces)
         entity_set.subtract(internal_faces)
 
+        if Settings.debug_mode? && Settings.debug_color_internal_faces?
+          internal_faces.each { |face|
+            face.material = "red"
+            face.back_material = "maroon"
+          }
+        end
+
         if oriented_faces.empty?
           #puts "> Searching for start face for surface orientation..."
           start_face, reversed = self.find_start_face(entity_set, transformation)
@@ -418,8 +425,8 @@ module TT::Plugins::SolidInspector2
         processed << face
         face.edges.each { |edge|
           next_faces = edge.faces.select { |f| f != face && faces.include?(f) }
-          raise RunTimeError, "Unexpected internal faces" if next_faces.size > 1
-          raise RunTimeError, "Unexpected border face" if next_faces.empty?
+          raise RuntimeError, "Unexpected internal faces" if next_faces.size > 1
+          raise RuntimeError, "Unexpected border face" if next_faces.empty?
           #next if next_faces.empty?
           next_face = next_faces[0]
           next if processed.include?(next_face)
