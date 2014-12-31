@@ -425,8 +425,8 @@ module TT::Plugins::SolidInspector2
         processed << face
         face.edges.each { |edge|
           next_faces = edge.faces.select { |f| f != face && faces.include?(f) }
-          raise RunTimeError, "Unexpected internal faces" if next_faces.size > 1
-          raise RunTimeError, "Unexpected border face" if next_faces.empty?
+          raise RuntimeError, "Unexpected internal faces" if next_faces.size > 1
+          raise RuntimeError, "Unexpected border face" if next_faces.empty?
           #next if next_faces.empty?
           next_face = next_faces[0]
           next if processed.include?(next_face)
