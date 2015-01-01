@@ -29,12 +29,12 @@ module TT::Plugins::SolidInspector2
       @shell_faces = Set.new
 
       start_face = find_start_face(@entities, true)
-      @shell_faces.merge(find_shell(start_face).keys)
+      @shell_faces.merge(find_shell(start_face))
 
       # Trying to resolve "external" faces appear to yield incorrect results.
       # For now this is disabled until the functionality of 2.1 is restored.
       #start_face = find_start_face(@entities, false)
-      #@shell_faces.merge(find_shell(start_face).keys)
+      #@shell_faces.merge(find_shell(start_face))
 
       # TODO: Is @reversed_faces ensured to return faces that only belong to the
       # shell or can the collection contain faces from @internal_faces?
@@ -172,7 +172,7 @@ module TT::Plugins::SolidInspector2
       c_p = c_n.cross(c_e)
       c_dir = edge_reversed_in?(e, f)
 
-      #min assignments
+      # Min assignments.
       min_a = Math::PI * 2
       shell_face = nil
 
@@ -195,37 +195,38 @@ module TT::Plugins::SolidInspector2
 
     # @param [Sketchup::Face] start_face
     #
-    # @return [Hash{Sketchup::Face => Nil}]
+    # @return [Array<Sketchup::Face>]
     def find_shell(start_face)
+      stack = [] # Unprocessed shell faces.
+      processed = Set.new
+      shell = Set.new
 
-      front_q = []  #unprocessed shell faces
-      face_h =  {}  #hash with expanded faces
-      edge_h =  {}  #Hash with expanded edges
-      shell_h = {}  #final shell
+      # Set up stack.
+      stack << start_face
+      processed << start_face
 
-      #push start face
-      front_q.push(start_face)
-      face_h[start_face] = nil
+      until stack.empty? do
 
-      while front_q.length > 0 do
+        face = stack.pop
+        shell << face
 
-        f = front_q.pop
-        shell_h[f] = nil
+        # Look for neighbouring shell faces.
+        face.loops.each { |loop|
+          loop.edges.each { |edge|
+            next if processed.include?(edge) || edge.faces.size < 2
 
-        f.loops.each { |loop|
-          loop.edges.each { |e|
-            if !edge_h.has_key?(e) && e.faces.length > 1
-              edge_h[e] = nil
-              f1 = find_other_shell_face(e, f)
-              unless face_h.has_key?(f1)
-                front_q.push(f1)
-                face_h[f1] = nil
-              end
-            end
-        }}
+            processed << edge
+            other_shell_face = find_other_shell_face(edge, face)
+
+            next if processed.include?(other_shell_face)
+
+            stack << other_shell_face
+            processed << other_shell_face
+          }
+        }
       end
 
-      return shell_h
+      return shell.to_a
     end
 
 
