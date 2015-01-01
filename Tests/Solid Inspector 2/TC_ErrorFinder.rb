@@ -380,10 +380,9 @@ class TC_ErrorFinder < TestUp::TestCase
     assert_equal(2027, errors.size, "Unexpected number of InternalFaces")
 
     errors = result.grep(PLUGIN::SolidErrors::ReversedFace)
-    assert_equal(0, errors.size, "Unexpected number of ReversedFaces")
+    assert_equal(1478, errors.size, "Unexpected number of ReversedFaces")
 
-    # TODO: Unknown number of reversed faces.
-    #assert_equal(1644, result.size, "Unexpected number of errors found")
+    assert_equal(3505, result.size, "Unexpected number of errors found")
   end
 
 

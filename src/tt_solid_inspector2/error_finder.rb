@@ -95,7 +95,7 @@ module TT::Plugins::SolidInspector2
         edges_with_internal_faces.each { |edge|
           errors << SolidErrors::InternalFaceEdge.new(edge)
         }
-      elsif edges_with_internal_faces.size > 0
+      else
 
         # Determine which faces are internal.
 
@@ -104,11 +104,14 @@ module TT::Plugins::SolidInspector2
         start_time = Time.new
 
         shell = Shell.new(entities)
-        Sketchup.active_model.start_operation("Shellify", true) # DEBUG
         shell.resolve
-        Sketchup.active_model.commit_operation # DEBUG
+
         shell.internal_faces.each { |face|
           errors << SolidErrors::InternalFace.new(face)
+        }
+
+        shell.reversed_faces.each { |face|
+          errors << SolidErrors::ReversedFace.new(face)
         }
 
         elapsed_time = Time.now - start_time

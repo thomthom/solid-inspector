@@ -24,8 +24,18 @@ module TT::Plugins::SolidInspector2
 
 
     def resolve
+      @internal_faces.clear
+      @reversed_faces.clear
+      @shell_faces = Set.new
+
       start_face = getStartFace(@entities, true)
-      @shell_faces = Set.new(getShell(start_face).keys)
+      @shell_faces.merge(getShell(start_face).keys)
+
+      # Trying to resolve "external" faces appear to yield incorrect results.
+      # For now this is disabled until the functionality of 2.1 is restored.
+      #start_face = getStartFace(@entities, false)
+      #@shell_faces.merge(getShell(start_face).keys)
+
       faces = @entities.grep(Sketchup::Face)
       @internal_faces = Set.new(faces).subtract(@shell_faces)
       nil
@@ -33,6 +43,44 @@ module TT::Plugins::SolidInspector2
 
 
     private
+
+
+    # @param [Sketchup::Face] face
+    #
+    # @return [Geom::Vector3d]
+    def face_normal(face)
+      normal = face.normal
+      if @reversed_faces.include?(face)
+        normal.reverse!
+      end
+      normal
+    end
+
+
+    # @param [Sketchup::Edge] edge
+    # @param [Sketchup::Face] face
+    #
+    # @return [Geom::Vector3d]
+    def edge_reversed_in?(edge, face)
+      reversed = edge.reversed_in?(face)
+      if @reversed_faces.include?(face)
+        reversed = !reversed
+      end
+      reversed
+    end
+
+
+    # @param [Sketchup::Face] face
+    #
+    # @return [Sketchup::Face]
+    def reverse_face(face)
+      if @reversed_faces.include?(face)
+        @reversed_faces.delete(face)
+      else
+        @reversed_faces << face
+      end
+      face
+    end
 
 
     #find a start face on the shell:
@@ -57,10 +105,10 @@ module TT::Plugins::SolidInspector2
       es.each { |e| max_e = e if getNormZComp(e) < getNormZComp(max_e) }
 
       max_f = max_e.faces[0]
-      max_e.faces.each { |f| max_f = f if f.normal.z.abs > max_f.normal.z.abs }
+      max_e.faces.each { |f| max_f = f if face_normal(f).z.abs > face_normal(max_f).z.abs }
 
-      return outside ? (max_f.normal.z < 0 ? max_f.reverse! : max_f) :
-                       (max_f.normal.z > 0 ? max_f.reverse! : max_f)
+      return outside ? (face_normal(max_f).z < 0 ? reverse_face(max_f) : max_f) :
+                       (face_normal(max_f).z > 0 ? reverse_face(max_f) : max_f)
     end
 
 
@@ -71,7 +119,7 @@ module TT::Plugins::SolidInspector2
 
     #construct a vector along the edge in the face's loop direction
     def getEdgeVector(e, f)
-      return e.reversed_in?(f) ? (e.vertices[0].position - e.vertices[1].position) :
+      return edge_reversed_in?(e, f) ? (e.vertices[0].position - e.vertices[1].position) :
                                  (e.vertices[1].position - e.vertices[0].position)
     end
 
@@ -80,7 +128,7 @@ module TT::Plugins::SolidInspector2
     #reverse the other face if appropriate.
     def getOtherFace(e, f)
       f1 = e.faces[0] == f ? e.faces[1] : e.faces[0]
-      return e.reversed_in?(f) == e.reversed_in?(f1) ? f1.reverse! : f1
+      return edge_reversed_in?(e, f) == edge_reversed_in?(e, f1) ? reverse_face(f1) : f1
     end
 
 
@@ -92,9 +140,9 @@ module TT::Plugins::SolidInspector2
       return getOtherFace(e, f) if e.faces.length == 2
 
       c_e = getEdgeVector(e, f)
-      c_n = f.normal
+      c_n = face_normal(f)
       c_p = c_n.cross(c_e)
-      c_dir = e.reversed_in?(f)
+      c_dir = edge_reversed_in?(e, f)
 
       #min assignments
       min_a = Math::PI * 2
@@ -102,7 +150,7 @@ module TT::Plugins::SolidInspector2
 
       e.faces.each { |f0|
         unless f0 == f
-          t_n = e.reversed_in?(f0) == c_dir ? f0.normal.reverse : f0.normal
+          t_n = edge_reversed_in?(e, f0) == c_dir ? face_normal(f0).reverse : face_normal(f0)
           t_p = c_e.cross(t_n)
           a = t_p.dot(c_n) < 0 ? (Math::PI * 2) - c_p.angle_between(t_p) :
                                                   c_p.angle_between(t_p)
@@ -113,7 +161,7 @@ module TT::Plugins::SolidInspector2
         end
       }
 
-      return c_dir == e.reversed_in?(shell_face) ? shell_face.reverse! : shell_face
+      return c_dir == edge_reversed_in?(e, shell_face) ? reverse_face(shell_face) : shell_face
     end
 
 
