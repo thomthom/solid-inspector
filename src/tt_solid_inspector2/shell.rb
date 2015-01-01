@@ -9,7 +9,8 @@ require "set"
 
 
 module TT::Plugins::SolidInspector2
-  # Based on Shellify by Anders Lyhagen
+  # Based on Shellify by Anders Lyhagen. A thousand thanks for the code
+  # contribution and feedback!
   class Shell
 
     attr_reader :internal_faces, :reversed_faces
