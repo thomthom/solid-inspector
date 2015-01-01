@@ -28,13 +28,16 @@ module TT::Plugins::SolidInspector2
       @reversed_faces.clear
       @shell_faces = Set.new
 
-      start_face = getStartFace(@entities, true)
-      @shell_faces.merge(getShell(start_face).keys)
+      start_face = find_start_face(@entities, true)
+      @shell_faces.merge(find_shell(start_face).keys)
 
       # Trying to resolve "external" faces appear to yield incorrect results.
       # For now this is disabled until the functionality of 2.1 is restored.
-      #start_face = getStartFace(@entities, false)
-      #@shell_faces.merge(getShell(start_face).keys)
+      #start_face = find_start_face(@entities, false)
+      #@shell_faces.merge(find_shell(start_face).keys)
+
+      # TODO: Is @reversed_faces ensured to return faces that only belong to the
+      # shell or can the collection contain faces from @internal_faces?
 
       faces = @entities.grep(Sketchup::Face)
       @internal_faces = Set.new(faces).subtract(@shell_faces)
@@ -83,18 +86,25 @@ module TT::Plugins::SolidInspector2
     end
 
 
-    #find a start face on the shell:
-    # 1) Pick the vertex (v) with max z component (ignore vertices with no faces attached)
+    # Find a start face on the shell:
+    # 1) Pick the vertex (v) with max z component.
+    #    (ignore vertices with no faces attached)
     # 2) For v, pick the attached edge (e) least aligned with the z axis
     # 3) For e, pick the face attached with maximum |z| normal component
-    # 4) reverse face if necessary
+    # 4) reverse face if necessary.
     #
     # Two issues:
-    # 1) The selected face might be an external flap in which case Shellify will fail.
-    # 2) If we pick a vertex connected to a hole, then the selected face may have
-    #    max_f.normal.z == 0. In this case we are unable to determine whether to reverse the
-    #    face.
-    def getStartFace(ents, outside)
+    # 1) The selected face might be an external flap in which case Shellify will
+    #    fail.
+    # 2) If we pick a vertex connected to a hole, then the selected face may
+    #    have max_f.normal.z == 0. In this case we are unable to determine
+    #    whether to reverse the face.
+    #
+    # @param [Sketchup::Entities] ents
+    # @param [Boolean] outside
+    #
+    # @return [Sketchup::Face]
+    def find_start_face(ents, outside)
       vs = ents.grep(Sketchup::Edge).map{|e| e.vertices}.flatten!.uniq!.find_all{|v| v.faces.length > 0}
 
       max_z = vs[0]
@@ -102,7 +112,7 @@ module TT::Plugins::SolidInspector2
 
       es = max_z.edges.find_all{|e| e.faces.length > 0}
       max_e = es[0]
-      es.each { |e| max_e = e if getNormZComp(e) < getNormZComp(max_e) }
+      es.each { |e| max_e = e if edge_normal_z_component(e) < edge_normal_z_component(max_e) }
 
       max_f = max_e.faces[0]
       max_e.faces.each { |f| max_f = f if face_normal(f).z.abs > face_normal(max_f).z.abs }
@@ -112,34 +122,52 @@ module TT::Plugins::SolidInspector2
     end
 
 
-    def getNormZComp(e)
+    # @param [Sketchup::Edge] e
+    #
+    # @return [Float]
+    def edge_normal_z_component(e)
       return (e.vertices[0].position - e.vertices[1].position).normalize!.z.abs
     end
 
 
-    #construct a vector along the edge in the face's loop direction
-    def getEdgeVector(e, f)
+    # Construct a vector along the edge in the face's loop direction.
+    #
+    # @param [Sketchup::Edge] e
+    # @param [Sketchup::Face] f
+    #
+    # @return [Geom::Vector3d]
+    def edge_vector(e, f)
       return edge_reversed_in?(e, f) ? (e.vertices[0].position - e.vertices[1].position) :
                                  (e.vertices[1].position - e.vertices[0].position)
     end
 
 
-    #the edges is known to have two faces, return the face that is not the parameter.
-    #reverse the other face if appropriate.
-    def getOtherFace(e, f)
+    # The edges is known to have two faces, return the face that is not the
+    # parameter. Reverse the other face if appropriate.
+    #
+    # @param [Sketchup::Edge] e
+    # @param [Sketchup::Face] f
+    #
+    # @return [Sketchup::Face]
+    def get_other_face(e, f)
       f1 = e.faces[0] == f ? e.faces[1] : e.faces[0]
       return edge_reversed_in?(e, f) == edge_reversed_in?(e, f1) ? reverse_face(f1) : f1
     end
 
 
-    #Given a face known to be on the shell and one of its edges, find the other shell face
-    #connected to the edge.
-    def getOtherShellFace(e, f)
+    # Given a face known to be on the shell and one of its edges, find the other
+    # shell face connected to the edge.
+    #
+    # @param [Sketchup::Edge] e
+    # @param [Sketchup::Face] f
+    #
+    # @return [Sketchup::Face]
+    def find_other_shell_face(e, f)
 
       return nil if e.faces.length == 1
-      return getOtherFace(e, f) if e.faces.length == 2
+      return get_other_face(e, f) if e.faces.length == 2
 
-      c_e = getEdgeVector(e, f)
+      c_e = edge_vector(e, f)
       c_n = face_normal(f)
       c_p = c_n.cross(c_e)
       c_dir = edge_reversed_in?(e, f)
@@ -165,7 +193,10 @@ module TT::Plugins::SolidInspector2
     end
 
 
-    def getShell(start_face)
+    # @param [Sketchup::Face] start_face
+    #
+    # @return [Hash{Sketchup::Face => Nil}]
+    def find_shell(start_face)
 
       front_q = []  #unprocessed shell faces
       face_h =  {}  #hash with expanded faces
@@ -185,7 +216,7 @@ module TT::Plugins::SolidInspector2
           loop.edges.each { |e|
             if !edge_h.has_key?(e) && e.faces.length > 1
               edge_h[e] = nil
-              f1 = getOtherShellFace(e, f)
+              f1 = find_other_shell_face(e, f)
               unless face_h.has_key?(f1)
                 front_q.push(f1)
                 face_h[f1] = nil
@@ -197,40 +228,6 @@ module TT::Plugins::SolidInspector2
       return shell_h
     end
 
-
-    def deleteStrayEdges(ents)
-      es = ents.grep(Sketchup::Edge)
-      es.each {|e| e.erase! if !e.deleted? && e.faces.length == 0}
-    end
-
-
-    def reduceToShell(ents, shell_h)
-      fs = ents.grep(Sketchup::Face)
-      fs.each {|f| f.erase! unless shell_h.has_key?(f)}
-      deleteStrayEdges(ents)
-    end
-
-
-    def reverseAll(ents)
-      ents.grep(Sketchup::Face).each {|f| f.reverse! }
-    end
-
-
-    def constructShell(ents, remove_internal)
-      start_face = getStartFace(ents, remove_internal)
-      shell_h = getShell(start_face)
-      reduceToShell(ents, shell_h)
-      reverseAll(ents) unless remove_internal
-    end
-
-
-    def shellify(ents)
-      #extract shell from the outside (-> remove internal geometry)
-      constructShell(ents, true)
-
-      #extract shell from the inside (-> remove external geometry)
-      constructShell(ents, false)
-    end
 
   end # class Shell
 end # module TT::Plugins::SolidInspector2
