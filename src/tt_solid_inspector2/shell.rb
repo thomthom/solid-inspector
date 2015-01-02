@@ -13,6 +13,10 @@ module TT::Plugins::SolidInspector2
   # contribution and feedback!
   class Shell
 
+
+    PI2 = Math::PI * 2
+
+
     attr_reader :internal_faces, :reversed_faces
 
 
@@ -182,38 +186,48 @@ module TT::Plugins::SolidInspector2
     # Given a face known to be on the shell and one of its edges, find the other
     # shell face connected to the edge.
     #
-    # @param [Sketchup::Edge] e
-    # @param [Sketchup::Face] f
+    # @param [Sketchup::Edge] edge
+    # @param [Sketchup::Face] face
     #
     # @return [Sketchup::Face]
-    def find_other_shell_face(e, f)
+    def find_other_shell_face(edge, face)
+      return nil if edge.faces.size == 1
+      return get_other_face(edge, face) if edge.faces.size == 2
 
-      return nil if e.faces.length == 1
-      return get_other_face(e, f) if e.faces.length == 2
+      edge_direction = edge_vector(edge, face)
+      face_direction = face_normal(face)
+      product = face_direction.cross(edge_direction)
+      reversed = edge_reversed_in?(edge, face)
 
-      c_e = edge_vector(e, f)
-      c_n = face_normal(f)
-      c_p = c_n.cross(c_e)
-      c_dir = edge_reversed_in?(e, f)
-
-      # Min assignments.
-      min_a = Math::PI * 2
+      minimum_angle = PI2
       shell_face = nil
 
-      e.faces.each { |f0|
-        unless f0 == f
-          t_n = edge_reversed_in?(e, f0) == c_dir ? face_normal(f0).reverse : face_normal(f0)
-          t_p = c_e.cross(t_n)
-          a = t_p.dot(c_n) < 0 ? (Math::PI * 2) - c_p.angle_between(t_p) :
-                                                  c_p.angle_between(t_p)
-          if a < min_a
-            min_a = a
-            shell_face = f0
-          end
+      edge.faces.each { |other_face|
+        next if other_face == face
+
+        other_face_direction = face_normal(other_face)
+        if edge_reversed_in?(edge, other_face) == reversed
+          other_face_direction.reverse!
+        end
+
+        other_product = edge_direction.cross(other_face_direction)
+
+        angle = product.angle_between(other_product)
+        if other_product.dot(face_direction) < 0
+          angle = PI2 - angle
+        end
+
+        if angle < minimum_angle
+          minimum_angle = angle
+          shell_face = other_face
         end
       }
 
-      return c_dir == edge_reversed_in?(e, shell_face) ? reverse_face(shell_face) : shell_face
+      if edge_reversed_in?(edge, shell_face) == reversed
+        reverse_face(shell_face)
+      end
+
+      shell_face
     end
 
 
