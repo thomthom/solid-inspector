@@ -140,36 +140,42 @@ module TT::Plugins::SolidInspector2
     end
 
 
-    # @param [Sketchup::Edge] e
+    # @param [Sketchup::Edge] edge
     #
     # @return [Float]
-    def edge_normal_z_component(e)
-      return (e.vertices[0].position - e.vertices[1].position).normalize!.z.abs
+    def edge_normal_z_component(edge)
+      edge.line[1].z.abs
     end
 
 
     # Construct a vector along the edge in the face's loop direction.
     #
-    # @param [Sketchup::Edge] e
+    # @param [Sketchup::Edge] edge
     # @param [Sketchup::Face] f
     #
     # @return [Geom::Vector3d]
-    def edge_vector(e, f)
-      return edge_reversed_in?(e, f) ? (e.vertices[0].position - e.vertices[1].position) :
-                                 (e.vertices[1].position - e.vertices[0].position)
+    def edge_vector(edge, face)
+      if edge_reversed_in?(edge, face)
+        edge.end.position.vector_to(edge.start)
+      else
+        edge.start.position.vector_to(edge.end)
+      end
     end
 
 
     # The edges is known to have two faces, return the face that is not the
-    # parameter. Reverse the other face if appropriate.
+    # argument. Reverse the other face if appropriate.
     #
-    # @param [Sketchup::Edge] e
-    # @param [Sketchup::Face] f
+    # @param [Sketchup::Edge] edge
+    # @param [Sketchup::Face] face
     #
     # @return [Sketchup::Face]
-    def get_other_face(e, f)
-      f1 = e.faces[0] == f ? e.faces[1] : e.faces[0]
-      return edge_reversed_in?(e, f) == edge_reversed_in?(e, f1) ? reverse_face(f1) : f1
+    def get_other_face(edge, face)
+      other_face = edge.faces.find { |edge_face| edge_face != face }
+      if edge_reversed_in?(edge, face) == edge_reversed_in?(edge, other_face)
+        reverse_face(other_face)
+      end
+      other_face
     end
 
 
