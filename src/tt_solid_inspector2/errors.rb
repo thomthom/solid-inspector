@@ -243,9 +243,31 @@ module TT::Plugins::SolidInspector2
       end
 
       def fix
-        return false if @entities[0].deleted?
-        # TODO: Reverse materials.
-        @entities[0].reverse!
+        face = @entities[0]
+        return false if face.deleted?
+
+        # First read the UV data before we reverse the face. Otherwise the
+        # UV data will be destroyed.
+        front_material = face.material
+        back_material = face.back_material
+
+        front_mapping = uv_mapping(face, true)
+        back_mapping = uv_mapping(face, false)
+
+        front_projection = get_projection(face, true)
+        back_projection = get_projection(face, false)
+
+        # Now the face can be reversed before we apply the materials again.
+        # This must be done here because reversing the face destroy the UV
+        # mapping applied.
+        face.reverse!
+
+        apply_material(face, back_material, back_mapping, true)
+        apply_material(face, front_material, front_mapping, false)
+
+        apply_projection(face, back_projection, true)
+        apply_projection(face, front_projection, false)
+
         @fixed = true
         true
       end
@@ -258,6 +280,69 @@ module TT::Plugins::SolidInspector2
           draw_edge(view, edge, transformation)
         }
         nil
+      end
+
+      private
+
+      def uv_mapping(face, front)
+        material = (front) ? face.material : face.back_material
+        if material && material.texture
+          start_point = face.vertices.first.position
+          #start_point.transform!(face.model.edit_transform.inverse)
+
+          points = [start_point]
+          points << points[0].offset(face.normal.axes.x, 10)
+          points << points[0].offset(face.normal.axes.y, 10)
+          points << points[1].offset(face.normal.axes.y, 10)
+
+          tw = Sketchup.create_texture_writer
+          uvh = face.get_UVHelper(true, true, tw)
+
+          entities = face.parent.entities
+
+          mapping = []
+          points.each_with_index { |point, index|
+            uvq = (front) ? uvh.get_front_UVQ(point) : uvh.get_back_UVQ(point)
+            mapping << point
+            mapping << uvq_to_uv(uvq)
+          }
+
+          mapping
+        else
+          nil
+        end
+      end
+
+      def apply_material(face, material, uv_mapping, front)
+        if material && uv_mapping
+          face.position_material(material, uv_mapping, front)
+        else
+          if front
+            face.material = material
+          else
+            face.back_material = material
+          end
+        end
+        nil
+      end
+
+      def uvq_to_uv(uvq)
+        Geom::Point3d.new(uvq.x / uvq.z, uvq.y / uvq.z, 1.0)
+      end
+
+      def apply_projection(face, projection, front)
+        if projection && face.respond_to?(:set_texture_projection)
+          face.set_texture_projection(projection, front)
+        end
+        nil
+      end
+
+      def get_projection(face, front)
+        if face.respond_to?(:get_texture_projection)
+          face.get_texture_projection(front)
+        else
+          nil
+        end
       end
 
     end # class
