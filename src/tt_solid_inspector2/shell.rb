@@ -101,25 +101,42 @@ module TT::Plugins::SolidInspector2
     #    have max_f.normal.z == 0. In this case we are unable to determine
     #    whether to reverse the face.
     #
-    # @param [Sketchup::Entities] ents
+    # @param [Sketchup::Entities] entities
     # @param [Boolean] outside
     #
     # @return [Sketchup::Face]
-    def find_start_face(ents, outside)
-      vs = ents.grep(Sketchup::Edge).map{|e| e.vertices}.flatten!.uniq!.find_all{|v| v.faces.length > 0}
+    def find_start_face(entities, outside)
+      # Ignore vertices with no faces attached.
+      vertices = Set.new
+      edges = entities.grep(Sketchup::Edge) { |edge|
+        vertices.merge(edge.vertices)
+      }
+      vertices.delete_if { |vertex| vertex.faces.empty? }
 
-      max_z = vs[0]
-      vs.each { |v| max_z = v if v.position.z > max_z.position.z }
+      # 1) Pick the vertex (v) with max z component.
+      max_z_vertex = vertices.max { |a, b|
+        a.position.z <=> b.position.z
+      }
 
-      es = max_z.edges.find_all{|e| e.faces.length > 0}
-      max_e = es[0]
-      es.each { |e| max_e = e if edge_normal_z_component(e) < edge_normal_z_component(max_e) }
+      # 2) For v, pick the attached edge (e) least aligned with the z axis.
+      edges = max_z_vertex.edges.delete_if { |edge| edge.faces.empty? }
+      edge = edges.min { |a, b|
+        edge_normal_z_component(a) <=> edge_normal_z_component(b)
+      }
 
-      max_f = max_e.faces[0]
-      max_e.faces.each { |f| max_f = f if face_normal(f).z.abs > face_normal(max_f).z.abs }
+      # 3) For e, pick the face attached with maximum |z| normal component.
+      face = edge.faces.max { |a, b|
+        face_normal(a).z.abs <=> face_normal(b).z.abs
+      }
 
-      return outside ? (face_normal(max_f).z < 0 ? reverse_face(max_f) : max_f) :
-                       (face_normal(max_f).z > 0 ? reverse_face(max_f) : max_f)
+      # 4) reverse face if necessary.
+      if outside
+        reverse_face(face) if face_normal(face).z < 0
+      else
+        reverse_face(face) if face_normal(face).z > 0
+      end
+
+      face
     end
 
 
@@ -194,6 +211,9 @@ module TT::Plugins::SolidInspector2
     end
 
 
+    # Traverses the connected mesh for the given start face and resolves a set
+    # of faces representing the outer shell of the mesh.
+    #
     # @param [Sketchup::Face] start_face
     #
     # @return [Array<Sketchup::Face>]
@@ -227,7 +247,7 @@ module TT::Plugins::SolidInspector2
         }
       end
 
-      return shell.to_a
+      shell.to_a
     end
 
 
