@@ -11,6 +11,7 @@ require "set"
 module TT::Plugins::SolidInspector2
 
   require File.join(PATH, "errors.rb")
+  require File.join(PATH, "shell.rb")
 
 
   module ErrorFinder
@@ -94,228 +95,28 @@ module TT::Plugins::SolidInspector2
         edges_with_internal_faces.each { |edge|
           errors << SolidErrors::InternalFaceEdge.new(edge)
         }
-      elsif edges_with_internal_faces.size > 0
+      elsif all_faces.size > 0
 
         # Determine which faces are internal.
 
-        if debug
-          model = Sketchup.active_model
-          model.start_operation("Find Internal Faces")
-
-          outer_front_material = model.materials.add("Outer Skin Front Face")
-          outer_front_material.color = Sketchup::Color.new(0, 255, 0)
-
-          outer_back_material = model.materials.add("Outer Skin Back Face")
-          outer_back_material.color = Sketchup::Color.new(0, 128, 0)
-
-          inner_front_material = model.materials.add("Inner Skin Front Face")
-          inner_front_material.color = Sketchup::Color.new(255, 0, 0)
-
-          inner_back_material = model.materials.add("Inner Skin Back Face")
-          inner_back_material.color = Sketchup::Color.new(128, 0, 0)
-
-          possible_inner_face_material = model.materials.add("Possible Inner Face")
-          possible_inner_face_material.color = Sketchup::Color.new(128, 255, 0)
-        end
-
-        #puts "Finding external faces by ray tracing..."
-        Sketchup.status_text = "Finding external faces by ray tracing..."
-
-        # Shoot rays to find outer skin faces that we are 100% certain are not
-        # internal.
-        start_time = Time.new
-        outer_faces = Set.new
-        all_faces.each { |face|
-          if self.face_outward?(face, transformation, true)
-            if debug
-              face.material = outer_front_material
-              face.back_material = outer_back_material
-            end
-            outer_faces << face
-            oriented_faces << face
-          elsif self.face_outward?(face, transformation, false)
-            if debug
-              face.material = outer_front_material
-              face.back_material = outer_back_material
-            end
-            outer_faces << face
-            #puts "> ReversedFace: #{face.entityID}"
-            errors << SolidErrors::ReversedFace.new(face)
-            reversed_faces << face
-            possible_reversed_faces.delete(face)
-          else
-            if debug
-              face.material = possible_inner_face_material
-              face.back_material = possible_inner_face_material
-            end
-            possible_internal_faces << face
-          end
-        }
-        elapsed_time = Time.now - start_time
-        if Settings.debug_mode?
-          puts "> Finding external faces by ray tracing took: #{elapsed_time}s"
-        end
-
-        Sketchup.status_text = "Finding internal faces..."
-
-        # Find faces that we know for sure must be internal.
-        possible_internal_faces.to_a.each { |face|
-          is_internal = face.edges.any? { |edge|
-            outer = edge.faces.reject { |f|
-              f == face || !outer_faces.include?(f)
-            }
-            outer.size > 1
-          }
-          if is_internal
-            if debug
-              face.material = inner_front_material
-              face.back_material = inner_back_material
-            end
-            internal_faces << face
-            errors << SolidErrors::InternalFace.new(face)
-            possible_internal_faces.delete(face)
-          end
-        }
-
-        # Iteratively find outer skin faces. We are looking for faces where at
-        # least two of it's edges connect to one other face confirmed to not be
-        # internal. We keep refining this until we find no new faces that match
-        # this criteria.
-        materials = []
-        materials_back = []
+        Sketchup.status_text = "Resolving manifold..."
 
         start_time = Time.new
-        i = 0
-        loop do
-          i += 1
 
-          Sketchup.status_text = "Refining search for internal faces (#{i})..."
+        shell = Shell.new(entities)
+        shell.resolve
 
-          #puts "> Refine: #{i}"
-          if debug
-            material = entities.model.materials.add("RefineFront")
-            back_material = entities.model.materials.add("RefineBack")
-            materials << material
-            materials_back << back_material
-          end
-
-          new_outer = Set.new
-
-          # Need to iteratively find faces that are connected to other faces
-          # verified to be internal. If any of the edges have faces that all
-          # are marked for removal this face should be also marked for removal.
-          possible_internal_faces.to_a.each { |face|
-            # Look for neighboring faces that are known to be outer faces.
-            outer_neighbours = face.edges.select { |edge|
-              edge.faces.any? { |f| outer_faces.include?(f) }
-            }
-            # Short-circuit unless there is more than one face.
-            next if outer_neighbours.size < 2
-
-            # Check if any of the edges are connected exclusively to faces that
-            # are marked for deletion.
-            has_inner_neighbours = face.edges.any? { |edge|
-              edge.faces.all? { |f| f == face || internal_faces.include?(f) }
-            }
-            # If we found any it would be part of an internal surface and should
-            # also be erased. If not, then it's an outer skin face and should be
-            # preserved.
-            if outer_neighbours.size > 1 && !has_inner_neighbours
-              if
-                face.material = material
-                face.back_material = back_material
-              end
-              new_outer << face
-            end
-          }
-
-          outer_faces.merge(new_outer)
-          possible_internal_faces.subtract(new_outer)
-
-          break if new_outer.empty?
-          #raise "Safety Break!" if i > 100 # Temp safety limit.
-        end
-
-        elapsed_time = Time.now - start_time
-        if Settings.debug_mode?
-          puts "> Iteratively searching for internal faces took: #{elapsed_time}s"
-        end
-
-        if debug && materials.size > 1
-          #puts "> Adjusting refinement colors..."
-          #puts "  > #{materials.size}"
-
-          front_color_step = 192.0 / materials.size
-          back_color_step = 128.0 / materials.size
-
-          materials.size.times { |i|
-            front_color = (front_color_step * i).to_i
-            material = materials[i]
-            material.color = Sketchup::Color.new(front_color, front_color, 255)
-
-            back_color = (back_color_step * i).to_i
-            back_material = materials_back[i]
-            back_material.color = Sketchup::Color.new(back_color, back_color, 128)
-          }
-        end
-
-        if debug
-          model.commit_operation
-        end
-
-        # The remaining faces should all be internal faces.
-        internal_faces.merge(possible_internal_faces)
-        possible_internal_faces.each { |face|
+        shell.internal_faces.each { |face|
           errors << SolidErrors::InternalFace.new(face)
         }
-      end
 
-      # If there was no border edges or faces connected to more than two faces
-      # then we can scan the surface of the mesh to check that the face normals
-      # are oriented consistently.
-      # Stray edges are ignored from this because they won't interfere with the
-      # surface detection.
-      is_manifold = border_edges.empty? && edges_with_internal_faces.empty?
-      if border_edges.empty? && all_faces.size > 0
-
-        #puts "Analyzing face normals..."
-        Sketchup.status_text = "Analyzing face normals..."
-        start_time = Time.new
-
-        # The set of faces representing the outer skin.
-        entity_set = Set.new(all_faces)
-        entity_set.subtract(internal_faces)
-
-        if Settings.debug_mode? && Settings.debug_color_internal_faces?
-          internal_faces.each { |face|
-            face.material = "red"
-            face.back_material = "maroon"
-          }
-        end
-
-        if oriented_faces.empty?
-          #puts "> Searching for start face for surface orientation..."
-          start_face, reversed = self.find_start_face(entity_set, transformation)
-          #puts "  > Start Face: #{start_face.entityID}"
-          #puts "  > Reversed: #{reversed}"
-        else
-          # If we previously found some oriented faces in the inner faces check
-          # then use these in order to avoid doing more ray tracing.
-          start_face = self.find_largest_faces(oriented_faces)
-          reversed = false
-        end
-
-        x = self.find_reversed_faces(entity_set, start_face, reversed) { |face|
-          unless reversed_faces.include?(face)
-            errors << SolidErrors::ReversedFace.new(face)
-          end
+        shell.reversed_faces.each { |face|
+          errors << SolidErrors::ReversedFace.new(face)
         }
-        #puts "Reversed Faces (Surface Search): #{reversed_faces.size}"
-        #puts "Reversed Faces (Manifold Search): #{x.size}"
 
         elapsed_time = Time.now - start_time
         if Settings.debug_mode?
-          puts "> Reversed face detection took: #{elapsed_time}s"
+          puts "> Resolving manifold took: #{elapsed_time}s"
         end
       end
 

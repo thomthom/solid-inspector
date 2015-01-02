@@ -45,8 +45,6 @@ class TC_ErrorFinder < TestUp::TestCase
 
     result = PLUGIN::ErrorFinder.find_errors(entities, transformation)
 
-    assert_equal(270, result.size, "Unexpected number of errors found")
-
     errors = result.grep(PLUGIN::SolidErrors::ReversedFace)
     assert_equal(103, errors.size, "Unexpected number of ReversedFaces")
 
@@ -55,6 +53,8 @@ class TC_ErrorFinder < TestUp::TestCase
 
     errors = result.grep(PLUGIN::SolidErrors::ShortEdge)
     assert_equal(141, errors.size, "Unexpected number of ShortEdges")
+
+    assert_equal(270, result.size, "Unexpected number of errors found")
   end
 
 
@@ -124,10 +124,13 @@ class TC_ErrorFinder < TestUp::TestCase
 
     result = PLUGIN::ErrorFinder.find_errors(entities, transformation)
 
-    assert_equal(4, result.size, "Unexpected number of errors found")
-
     errors = result.grep(PLUGIN::SolidErrors::InternalFace)
     assert_equal(4, errors.size, "Unexpected number of InternalFaces")
+
+    errors = result.grep(PLUGIN::SolidErrors::ShortEdge)
+    assert_equal(2112, errors.size, "Unexpected number of ShortEdges")
+
+    assert_equal(2116, result.size, "Unexpected number of errors found")
   end
 
 
@@ -153,10 +156,10 @@ class TC_ErrorFinder < TestUp::TestCase
 
     result = PLUGIN::ErrorFinder.find_errors(entities, transformation)
 
-    assert_equal(46, result.size, "Unexpected number of errors found")
-
     errors = result.grep(PLUGIN::SolidErrors::ReversedFace)
     assert_equal(46, errors.size, "Unexpected number of ReversedFaces")
+
+    assert_equal(46, result.size, "Unexpected number of errors found")
   end
 
 
@@ -185,10 +188,10 @@ class TC_ErrorFinder < TestUp::TestCase
 
     result = PLUGIN::ErrorFinder.find_errors(entities, transformation)
 
-    assert_equal(18, result.size, "Unexpected number of errors found")
-
     errors = result.grep(PLUGIN::SolidErrors::ReversedFace)
     assert_equal(18, errors.size, "Unexpected number of ReversedFaces")
+
+    assert_equal(18, result.size, "Unexpected number of errors found")
   end
 
 
@@ -200,8 +203,6 @@ class TC_ErrorFinder < TestUp::TestCase
 
     result = PLUGIN::ErrorFinder.find_errors(entities, transformation)
 
-    assert_equal(75, result.size, "Unexpected number of errors found")
-
     errors = result.grep(PLUGIN::SolidErrors::StrayEdge)
     assert_equal(3, errors.size, "Unexpected number of StrayEdges")
 
@@ -210,6 +211,8 @@ class TC_ErrorFinder < TestUp::TestCase
 
     errors = result.grep(PLUGIN::SolidErrors::ShortEdge)
     assert_equal(70, errors.size, "Unexpected number of ShortEdges")
+
+    assert_equal(75, result.size, "Unexpected number of errors found")
   end
 
 
@@ -326,7 +329,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_18_Shellifyexamples_skp
+  def test_find_errors_model_18_Shellifyexamples_skp_Group3
     model = load_test_model("Shellifyexamples.skp")
     definition = model.definitions["Group#3"]
     instance = definition.instances[0]
@@ -342,7 +345,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_19_Shellifyexamples_skp
+  def test_find_errors_model_19_Shellifyexamples_skp_Group1
     model = load_test_model("Shellifyexamples.skp")
     definition = model.definitions["Group#1"]
     instance = definition.instances[0]
@@ -364,7 +367,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_20_Shellifyexamples_skp
+  def test_find_errors_model_20_Shellifyexamples_skp_Group2
     model = load_test_model("Shellifyexamples.skp")
     definition = model.definitions["Group#2"]
     instance = definition.instances[0]
@@ -373,18 +376,17 @@ class TC_ErrorFinder < TestUp::TestCase
 
     result = PLUGIN::ErrorFinder.find_errors(entities, transformation)
 
-    # TODO: Unknown number of reversed faces.
-    #assert_equal(1644, result.size, "Unexpected number of errors found")
-
     errors = result.grep(PLUGIN::SolidErrors::InternalFace)
-    assert_equal(1644, errors.size, "Unexpected number of InternalFaces")
+    assert_equal(2027, errors.size, "Unexpected number of InternalFaces")
 
     errors = result.grep(PLUGIN::SolidErrors::ReversedFace)
-    assert_equal(0, errors.size, "Unexpected number of ReversedFaces")
+    assert_equal(1478, errors.size, "Unexpected number of ReversedFaces")
+
+    assert_equal(3505, result.size, "Unexpected number of errors found")
   end
 
 
-  def test_find_errors_model_21_Shellifyexamples_skp
+  def test_find_errors_model_21_Shellifyexamples_skp_Group2_3
     model = load_test_model("Shellifyexamples.skp")
     definition = model.definitions["Group2#3"]
     instance = definition.instances[0]
@@ -414,10 +416,10 @@ class TC_ErrorFinder < TestUp::TestCase
 
     result = PLUGIN::ErrorFinder.find_errors(entities, transformation)
 
-    assert_equal(144, result.size, "Unexpected number of errors found")
-
     errors = result.grep(PLUGIN::SolidErrors::ReversedFace)
     assert_equal(144, errors.size, "Unexpected number of ReversedFaces")
+
+    assert_equal(144, result.size, "Unexpected number of errors found")
   end
 
 
@@ -483,10 +485,10 @@ class TC_ErrorFinder < TestUp::TestCase
 
     result = PLUGIN::ErrorFinder.find_errors(entities, transformation)
 
-    assert_equal(1, result.size, "Unexpected number of errors found")
-
     errors = result.grep(PLUGIN::SolidErrors::ReversedFace)
     assert_equal(1, errors.size, "Unexpected number of ReversedFaces")
+
+    assert_equal(1, result.size, "Unexpected number of errors found")
   end
 
 
@@ -499,10 +501,10 @@ class TC_ErrorFinder < TestUp::TestCase
 
     result = PLUGIN::ErrorFinder.find_errors(entities, transformation)
 
-    assert_equal(10, result.size, "Unexpected number of errors found")
-
     errors = result.grep(PLUGIN::SolidErrors::ReversedFace)
     assert_equal(10, errors.size, "Unexpected number of ReversedFaces")
+
+    assert_equal(10, result.size, "Unexpected number of errors found")
   end
 
 
@@ -531,13 +533,13 @@ class TC_ErrorFinder < TestUp::TestCase
 
     result = PLUGIN::ErrorFinder.find_errors(entities, transformation)
 
-    assert_equal(1890, result.size, "Unexpected number of errors found")
-
     errors = result.grep(PLUGIN::SolidErrors::InternalFace)
     assert_equal(1667, errors.size, "Unexpected number of InternalFaces")
 
     errors = result.grep(PLUGIN::SolidErrors::ReversedFace)
     assert_equal(223, errors.size, "Unexpected number of ReversedFaces")
+
+    assert_equal(1890, result.size, "Unexpected number of errors found")
   end
 
 
@@ -550,13 +552,13 @@ class TC_ErrorFinder < TestUp::TestCase
 
     result = PLUGIN::ErrorFinder.find_errors(entities, transformation)
 
-    assert_equal(1740, result.size, "Unexpected number of errors found")
-
     errors = result.grep(PLUGIN::SolidErrors::InternalFace)
     assert_equal(1472, errors.size, "Unexpected number of InternalFaces")
 
     errors = result.grep(PLUGIN::SolidErrors::ReversedFace)
     assert_equal(268, errors.size, "Unexpected number of ReversedFaces")
+
+    assert_equal(1740, result.size, "Unexpected number of errors found")
   end
 
 

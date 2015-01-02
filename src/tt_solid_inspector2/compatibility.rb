@@ -64,8 +64,10 @@ module TT::Plugins::SolidInspector2
 
   end # class
 
-
-  @window = CompatibilityWarning.new(@extension)
-  @window.show
+  if Sketchup.version.to_i < 14 && !file_loaded?(__FILE__)
+    @window = CompatibilityWarning.new(@extension)
+    @window.show
+    file_loaded(__FILE__)
+  end
 
 end # module TT::Plugins::SolidInspector2

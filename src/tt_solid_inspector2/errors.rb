@@ -244,6 +244,7 @@ module TT::Plugins::SolidInspector2
 
       def fix
         return false if @entities[0].deleted?
+        # TODO: Reverse materials.
         @entities[0].reverse!
         @fixed = true
         true
