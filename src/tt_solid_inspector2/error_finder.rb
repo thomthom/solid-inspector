@@ -95,7 +95,7 @@ module TT::Plugins::SolidInspector2
         edges_with_internal_faces.each { |edge|
           errors << SolidErrors::InternalFaceEdge.new(edge)
         }
-      else
+      elsif all_faces.size > 0
 
         # Determine which faces are internal.
 

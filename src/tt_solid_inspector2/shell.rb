@@ -112,7 +112,7 @@ module TT::Plugins::SolidInspector2
     def find_start_face(entities, outside)
       # Ignore vertices with no faces attached.
       vertices = Set.new
-      edges = entities.grep(Sketchup::Edge) { |edge|
+      entities.grep(Sketchup::Edge) { |edge|
         vertices.merge(edge.vertices)
       }
       vertices.delete_if { |vertex| vertex.faces.empty? }
