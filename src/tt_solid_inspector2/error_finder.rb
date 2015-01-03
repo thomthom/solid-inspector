@@ -26,133 +26,112 @@ module TT::Plugins::SolidInspector2
         puts ""
         puts "ErrorFinder.find_errors"
       end
-      total_start_time = Time.new
-
-      # TODO: Separate entities in group of them being connected to each other.
 
       errors = []
 
-      mesh_border_edges = []
-      hole_edges = []
-      edges_with_internal_faces = []
+      self.time("Total analysis") {
 
-      all_faces = entities.grep(Sketchup::Face)
+        mesh_border_edges = []
+        hole_edges = []
+        edges_with_internal_faces = []
 
-      Sketchup.status_text = "Inspecting edges..."
+        all_faces = entities.grep(Sketchup::Face)
 
-      # First check the edges.
-      entities.grep(Sketchup::Edge) { |edge|
-        num_faces = edge.faces.size
-        if num_faces == 0
-          errors << SolidErrors::StrayEdge.new(edge)
-        elsif num_faces == 1
-          face = edge.faces.first
-          if face.outer_loop.edges.include?(edge)
-            mesh_border_edges << edge
-          else
-            hole_edges << edge
+        Sketchup.status_text = "Inspecting edges..."
+
+        # First check the edges.
+        entities.grep(Sketchup::Edge) { |edge|
+          num_faces = edge.faces.size
+          if num_faces == 0
+            errors << SolidErrors::StrayEdge.new(edge)
+          elsif num_faces == 1
+            face = edge.faces.first
+            if face.outer_loop.edges.include?(edge)
+              mesh_border_edges << edge
+            else
+              hole_edges << edge
+            end
+          elsif num_faces > 2
+            edges_with_internal_faces << edge
           end
-        elsif num_faces > 2
-          edges_with_internal_faces << edge
+        }
+
+        Sketchup.status_text = "Analyzing edges..."
+
+        if mesh_border_edges.size > 0
+          Sketchup.status_text = "Sorting surface borders..."
+          self.group_connected_edges(mesh_border_edges).each { |edges|
+            errors << SolidErrors::SurfaceBorder.new(edges)
+          }
         end
+
+        if hole_edges.size > 0
+          Sketchup.status_text = "Sorting face holes..."
+          self.group_connected_edges(hole_edges).each { |edges|
+            errors << SolidErrors::FaceHole.new(edges)
+          }
+        end
+
+        is_manifold = all_faces.size > 0 &&
+                      mesh_border_edges.empty? &&
+                      hole_edges.empty?
+
+        if is_manifold
+          Sketchup.status_text = "Resolving manifold..."
+
+          self.time("Resolving manifold") {
+            shell = Shell.new(entities)
+            shell.resolve
+
+            shell.internal_faces.each { |face|
+              errors << SolidErrors::InternalFace.new(face)
+            }
+
+            shell.reversed_faces.each { |face|
+              errors << SolidErrors::ReversedFace.new(face)
+            }
+          } # time
+        else
+          # Cannot determine what faces are internal until all holes in the mesh
+          # is closed.
+          edges_with_internal_faces.each { |edge|
+            errors << SolidErrors::InternalFaceEdge.new(edge)
+          }
+        end
+
+        # Detect if there are nested entities.
+        self.time("Instance detection") {
+          groups = entities.grep(Sketchup::Group)
+          components = entities.grep(Sketchup::ComponentInstance)
+          instances = groups + components
+          instances.each { |instance|
+            errors << SolidErrors::NestedInstance.new(instance)
+          }
+        } # time
+
+        # Detect image entities.
+        self.time("Image detection") {
+          entities.grep(Sketchup::Image) { |image|
+            errors << SolidErrors::ImageEntity.new(image)
+          }
+        } # time
+
+        # Detect small edges.
+        if Settings.detect_short_edges?
+          self.time("Short edge detection") {
+            self.find_short_edges(entities) { |edge|
+              errors << SolidErrors::ShortEdge.new(edge)
+            }
+          } # time
+        end
+
       }
 
-
-      Sketchup.status_text = "Analyzing edges..."
-
-      if mesh_border_edges.size > 0
-        Sketchup.status_text = "Sorting surface borders..."
-        self.group_connected_edges(mesh_border_edges).each { |edges|
-          errors << SolidErrors::SurfaceBorder.new(edges)
-        }
-      end
-
-      if hole_edges.size > 0
-        Sketchup.status_text = "Sorting face holes..."
-        self.group_connected_edges(hole_edges).each { |edges|
-          errors << SolidErrors::FaceHole.new(edges)
-        }
-      end
-
-
-      is_manifold = all_faces.size > 0 &&
-                    mesh_border_edges.empty? &&
-                    hole_edges.empty?
-
-      if is_manifold
-        Sketchup.status_text = "Resolving manifold..."
-
-        start_time = Time.new
-
-        shell = Shell.new(entities)
-        shell.resolve
-
-        shell.internal_faces.each { |face|
-          errors << SolidErrors::InternalFace.new(face)
-        }
-
-        shell.reversed_faces.each { |face|
-          errors << SolidErrors::ReversedFace.new(face)
-        }
-
-        elapsed_time = Time.now - start_time
-        if Settings.debug_mode?
-          puts "> Resolving manifold took: #{elapsed_time}s"
-        end
-      else
-        # Cannot determine what faces are internal until all holes in the mesh
-        # is closed.
-        edges_with_internal_faces.each { |edge|
-          errors << SolidErrors::InternalFaceEdge.new(edge)
-        }
-      end
-
-
-      # Detect if there are nested entities.
-      start_time = Time.new
-      groups = entities.grep(Sketchup::Group)
-      components = entities.grep(Sketchup::ComponentInstance)
-      instances = groups + components
-      instances.each { |instance|
-        errors << SolidErrors::NestedInstance.new(instance)
-      }
-      elapsed_time = Time.now - start_time
       if Settings.debug_mode?
-        puts "> Instance detection took: #{elapsed_time}s"
-      end
-
-
-      # Detect image entities.
-      start_time = Time.new
-      entities.grep(Sketchup::Image) { |image|
-        errors << SolidErrors::ImageEntity.new(image)
-      }
-      elapsed_time = Time.now - start_time
-      if Settings.debug_mode?
-        puts "> Image detection took: #{elapsed_time}s"
-      end
-
-
-      # Detect small edges.
-      if Settings.detect_short_edges?
-        start_time = Time.new
-        self.find_short_edges(entities) { |edge|
-          errors << SolidErrors::ShortEdge.new(edge)
-        }
-        elapsed_time = Time.now - start_time
-        if Settings.debug_mode?
-          puts "> Short edge detection took: #{elapsed_time}s"
-        end
-      end
-
-
-      Sketchup.status_text = ""
-
-      elapsed_time = Time.now - total_start_time
-      if Settings.debug_mode?
-        puts "> Total analysis took: #{elapsed_time}s"
         puts ""
       end
+
+      Sketchup.status_text = ""
 
       errors
     end
@@ -232,7 +211,7 @@ module TT::Plugins::SolidInspector2
     end
 
 
-    # @param [Array<Sketchup::Edge>]
+    # @param [Array<Sketchup::Edge>] edges
     #
     # @return [Array<Array<Sketchup::Edge>>]
     def self.group_connected_edges(edges)
@@ -262,11 +241,26 @@ module TT::Plugins::SolidInspector2
     end
 
 
-    # @param [Sketchup::Edge]
+    # @param [Sketchup::Edge] edge
     #
     # @return [Array<Sketchup::Edge>]
     def self.neighbour_edges(edge)
       (edge.start.edges + edge.end.edges) - [edge]
+    end
+
+
+    # @param [String] message
+    # @param [Block] block
+    #
+    # @return [Nil]
+    def self.time(message, &block)
+      start_time = Time.new
+      block.call
+      elapsed_time = Time.now - start_time
+      if Settings.debug_mode?
+        puts "> #{message} took: #{elapsed_time}s"
+      end
+      nil
     end
 
   end # module ErrorFinder
