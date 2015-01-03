@@ -231,7 +231,7 @@ module TT::Plugins::SolidInspector2
 
       @filtered_errors = nil
       @current_error = nil
-      @errors = ErrorFinder.find_errors(entities, transformation)
+      @errors = ErrorFinder.find_errors(entities)
       @entities = entities
       @instance_path = instance_path
       @transformation = transformation
