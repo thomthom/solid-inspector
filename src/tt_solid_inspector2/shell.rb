@@ -68,6 +68,7 @@ module TT::Plugins::SolidInspector2
       until stack.empty?
         entity = stack.pop
         next unless entity.respond_to?(:all_connected)
+        num_groups += 1
         geometry_group = entity.all_connected
         yield(geometry_group)
         stack = stack - geometry_group
