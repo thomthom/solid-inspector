@@ -20,6 +20,7 @@ module TT::Plugins::SolidInspector2
     attr_reader :internal_faces, :reversed_faces
 
 
+    # @param [Sketchup::Entities] entities
     def initialize(entities)
       @entities = entities
       @shell_faces = Set.new
@@ -28,13 +29,16 @@ module TT::Plugins::SolidInspector2
     end
 
 
+    # @return [Nil]
     def resolve
       @internal_faces.clear
       @reversed_faces.clear
       @shell_faces = Set.new
 
-      start_face = find_start_face(@entities, true)
-      @shell_faces.merge(find_shell(start_face))
+      find_geometry_groups(@entities) { |geometry_group|
+        start_face = find_start_face(geometry_group, true)
+        @shell_faces.merge(find_shell(start_face))
+      }
 
       # Trying to resolve "external" faces appear to yield incorrect results.
       # For now this is disabled until the functionality of 2.1 is restored.
@@ -51,6 +55,25 @@ module TT::Plugins::SolidInspector2
 
 
     private
+
+
+    # @param [Sketchup::Entities] entities
+    #
+    # @yield [Array<Entity>]
+    #
+    # @return [Integer]
+    def find_geometry_groups(entities)
+      num_groups = 0
+      stack = entities.to_a
+      until stack.empty?
+        entity = stack.pop
+        next unless entity.respond_to?(:all_connected)
+        geometry_group = entity.all_connected
+        yield(geometry_group)
+        stack = stack - geometry_group
+      end
+      num_groups
+    end
 
 
     # @param [Sketchup::Face] face

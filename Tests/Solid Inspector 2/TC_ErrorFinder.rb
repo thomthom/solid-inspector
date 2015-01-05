@@ -37,7 +37,7 @@ class TC_ErrorFinder < TestUp::TestCase
   # ========================================================================== #
   # method ErrorFinder.find_errors
 
-  def test_find_errors_model_01_bottle_base_top_skp
+  def test_find_errors_model_bottle_base_top_skp
     model = load_test_model("bottle base top.skp")
     instance = model.entities[0]
     entities = instance.entities
@@ -57,7 +57,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_02_box_skp
+  def test_find_errors_model_box_skp
     model = load_test_model("box.skp")
     instance = model.entities[0]
     entities = instance.definition.entities
@@ -77,7 +77,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_03_coil_skp
+  def test_find_errors_model_coil_skp
     model = load_test_model("coil.skp")
     instance = model.entities[0]
     entities = instance.entities
@@ -91,7 +91,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_04_example_skp
+  def test_find_errors_model_example_skp
     model = load_test_model("example.skp")
     entities = model.entities
     transformation = IDENTITY
@@ -114,7 +114,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_05_FacePlateV3_skp
+  def test_find_errors_model_FacePlateV3_skp
     model = load_test_model("FacePlateV3.skp")
     entities = model.entities
     transformation = IDENTITY
@@ -131,7 +131,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_06_GEB_hollow_solids_skp
+  def test_find_errors_model_GEB_hollow_solids_skp_Group1
     model = load_test_model("GEB hollow solids.skp")
     definition = model.definitions["Group#1"]
     instance = definition.instances[0]
@@ -143,7 +143,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_07_GEB_hollow_solids_skp
+  def test_find_errors_model_GEB_hollow_solids_skp_Group3
     model = load_test_model("GEB hollow solids.skp")
     definition = model.definitions["Group#3"]
     instance = definition.instances[0]
@@ -158,7 +158,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_08_GEB_hollow_solids_skp
+  def test_find_errors_model_GEB_hollow_solids_skp_Group4
     model = load_test_model("GEB hollow solids.skp")
     definition = model.definitions["Group#4"]
     instance = definition.instances[0]
@@ -173,7 +173,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_08_GEB_hollow_solids_skp
+  def test_find_errors_model_GEB_hollow_solids_skp_Group2
     model = load_test_model("GEB hollow solids.skp")
     definition = model.definitions["Group#2"]
     instance = definition.instances[0]
@@ -188,7 +188,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_09_IncorrectReversedFaces_skp
+  def test_find_errors_model_IncorrectReversedFaces_skp
     model = load_test_model("IncorrectReversedFaces.skp")
     instance = model.entities[0]
     entities = instance.definition.entities
@@ -208,7 +208,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_10_ManifoldEdgeCase_skp
+  def test_find_errors_model_ManifoldEdgeCase_skp
     model = load_test_model("ManifoldEdgeCase.skp")
     instance = model.entities[0]
     entities = instance.entities
@@ -219,7 +219,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_11_ReversedFaces_SmallModel_skp
+  def test_find_errors_model_ReversedFaces_SmallModel_skp
     model = load_test_model("ReversedFaces-SmallModel.skp")
     entities = model.entities
     transformation = IDENTITY
@@ -233,7 +233,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_12_RIB_19_12_v3_skp
+  def test_find_errors_model_RIB_19_12_v3_skp_gruppo1
     model = load_test_model("RIB 19.12_v3.skp")
     definition = model.definitions["Gruppo#1"]
     instance = definition.instances[0]
@@ -248,7 +248,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_13_RIB_19_12_v3_skp
+  def test_find_errors_model_RIB_19_12_v3_skp_gruppo4
     model = load_test_model("RIB 19.12_v3.skp")
     definition = model.definitions["Gruppo#4"]
     instance = definition.instances[0]
@@ -260,7 +260,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_14_RIB_19_12_v3_skp
+  def test_find_errors_model_RIB_19_12_v3_skp_gruppo3
     model = load_test_model("RIB 19.12_v3.skp")
     definition = model.definitions["Gruppo#3"]
     instance = definition.instances[0]
@@ -272,7 +272,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_15_RIB_19_12_v3_skp
+  def test_find_errors_model_RIB_19_12_v3_skp_gruppo5
     model = load_test_model("RIB 19.12_v3.skp")
     definition = model.definitions["Gruppo#5"]
     instance = definition.instances[0]
@@ -284,7 +284,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_16_RIB_19_12_v3_skp
+  def test_find_errors_model_RIB_19_12_v3_skp_gruppo2
     model = load_test_model("RIB 19.12_v3.skp")
     definition = model.definitions["Gruppo#2"]
     instance = definition.instances[0]
@@ -299,7 +299,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_17_Shellifyexamples_skp
+  def test_find_errors_model_Shellifyexamples_skp_Group6
     model = load_test_model("Shellifyexamples.skp")
     definition = model.definitions["Group#6"]
     instance = definition.instances[0]
@@ -314,7 +314,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_18_Shellifyexamples_skp_Group3
+  def test_find_errors_model_Shellifyexamples_skp_Group3
     model = load_test_model("Shellifyexamples.skp")
     definition = model.definitions["Group#3"]
     instance = definition.instances[0]
@@ -329,7 +329,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_19_Shellifyexamples_skp_Group1
+  def test_find_errors_model_Shellifyexamples_skp_Group1
     model = load_test_model("Shellifyexamples.skp")
     definition = model.definitions["Group#1"]
     instance = definition.instances[0]
@@ -350,7 +350,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_20_Shellifyexamples_skp_Group2
+  def test_find_errors_model_Shellifyexamples_skp_Group2
     model = load_test_model("Shellifyexamples.skp")
     definition = model.definitions["Group#2"]
     instance = definition.instances[0]
@@ -368,7 +368,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_21_Shellifyexamples_skp_Group2_3
+  def test_find_errors_model_Shellifyexamples_skp_Group2_3
     model = load_test_model("Shellifyexamples.skp")
     definition = model.definitions["Group2#3"]
     instance = definition.instances[0]
@@ -389,7 +389,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_22_solid_tools_use_case_skp
+  def test_find_errors_model_solid_tools_use_case_skp
     model = load_test_model("solid_tools use_case.skp")
     instance = model.entities[0]
     entities = instance.entities
@@ -403,7 +403,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_23_solidproblem_skp
+  def test_find_errors_model_solidproblem_skp
     model = load_test_model("solidproblem.skp")
     instance = model.entities[0]
     entities = instance.entities
@@ -417,7 +417,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_24_SolidTest_skp
+  def test_find_errors_model_SolidTest_skp_Group2
     model = load_test_model("SolidTest.skp")
     definition = model.definitions["Group#2"]
     instance = definition.instances[0]
@@ -429,7 +429,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_25_SolidTest_skp
+  def test_find_errors_model_SolidTest_skp_Group1
     model = load_test_model("SolidTest.skp")
     definition = model.definitions["Group#1"]
     instance = definition.instances[0]
@@ -453,7 +453,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_26_SolidTest_skp_Group9
+  def test_find_errors_model_SolidTest_skp_Group9
     model = load_test_model("SolidTest.skp")
     definition = model.definitions["Group#11"]
     instance = definition.instances[0]
@@ -468,7 +468,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_27_SolidTest_skp
+  def test_find_errors_model_SolidTest_skp_Group10
     model = load_test_model("SolidTest.skp")
     definition = model.definitions["Group#10"]
     instance = definition.instances[0]
@@ -483,7 +483,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_28_SolidTest_skp
+  def test_find_errors_model_SolidTest_skp_Group3
     model = load_test_model("SolidTest.skp")
     definition = model.definitions["Group#3"]
     instance = definition.instances[0]
@@ -498,7 +498,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_29_SolidTest_skp
+  def test_find_errors_model_SolidTest_skp_Group5
     model = load_test_model("SolidTest.skp")
     definition = model.definitions["Group#5"]
     instance = definition.instances[0]
@@ -516,7 +516,7 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
-  def test_find_errors_model_30_SolidTest_skp
+  def test_find_errors_model_SolidTest_skp_Group4
     model = load_test_model("SolidTest.skp")
     definition = model.definitions["Group#4"]
     instance = definition.instances[0]
@@ -531,6 +531,18 @@ class TC_ErrorFinder < TestUp::TestCase
     assert_equal(268, errors.size, "Unexpected number of ReversedFaces")
 
     assert_equal(1740, result.size, "Unexpected number of errors found")
+  end
+
+
+  def test_find_errors_model_SolidHouseDisconnected_skp_Component27
+    model = load_test_model("SolidHouseDisconnected.skp")
+    definition = model.definitions["Component#27"]
+    instance = definition.instances[0]
+    entities = definition.entities
+
+    result = PLUGIN::ErrorFinder.find_errors(entities)
+
+    assert_equal(0, result.size, "Unexpected number of errors found")
   end
 
 
