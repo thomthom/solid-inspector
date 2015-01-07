@@ -546,4 +546,18 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
+  def test_find_errors_model_DisconnectedEdge_skp
+    model = load_test_model("DisconnectedEdge.skp")
+    instance = model.entities[0]
+    entities = instance.entities
+
+    result = PLUGIN::ErrorFinder.find_errors(entities)
+
+    assert_equal(1, result.size, "Unexpected number of errors found")
+
+    errors = result.grep(PLUGIN::SolidErrors::StrayEdge)
+    assert_equal(1, errors.size, "Unexpected number of StrayEdges")
+  end
+
+
 end # class

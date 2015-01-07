@@ -37,6 +37,7 @@ module TT::Plugins::SolidInspector2
 
       find_geometry_groups(@entities) { |geometry_group|
         start_face = find_start_face(geometry_group, true)
+        next if start_face.nil?
         @shell_faces.merge(find_shell(start_face))
       }
 
@@ -132,7 +133,7 @@ module TT::Plugins::SolidInspector2
     # @param [Sketchup::Entities] entities
     # @param [Boolean] outside
     #
-    # @return [Sketchup::Face]
+    # @return [Sketchup::Face, Nil]
     def find_start_face(entities, outside)
       # Ignore vertices with no faces attached.
       vertices = Set.new
@@ -140,6 +141,7 @@ module TT::Plugins::SolidInspector2
         vertices.merge(edge.vertices)
       }
       vertices.delete_if { |vertex| vertex.faces.empty? }
+      return nil if vertices.empty?
 
       # 1) Pick the vertex (v) with max z component.
       max_z_vertex = vertices.max { |a, b|
