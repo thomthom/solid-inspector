@@ -498,6 +498,47 @@ module TT::Plugins::SolidInspector2
 
     end # class
 
+
+    class SelfIntersecting < SolidError
+
+      def self.display_name
+        "Self Intersecting"
+      end
+
+      def self.description
+        "Self intersecting geometry usually create problems for 3d printing "\
+        "and the geometry should be split against itself. This can be done "\
+        "automatically and #{PLUGIN_NAME} need to run a new analysis "\
+        "afterwards."
+      end
+
+      def initialize(edge, face, point)
+        super([edge, face])
+        @point = point
+      end
+
+      def draw(view, transformation = nil)
+        #edge, face = @entities
+
+        #view.drawing_color = ERROR_COLOR_EDGE
+        #draw_edge(view, edge, transformation)
+
+        #view.drawing_color = ERROR_COLOR_FACE
+        #draw_face(view, face, transformation)
+
+        if transformation
+          point = @point.transform(transformation)
+        else
+          point = @point
+        end
+        view.line_width = 2
+        view.draw_points(point, 10, DRAW_CROSS, ERROR_COLOR_EDGE)
+        nil
+      end
+
+    end # class
+
+
   end # module SolidErrors
 
 end # module TT::Plugins::SolidInspector2

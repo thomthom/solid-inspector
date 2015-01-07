@@ -99,6 +99,13 @@ module TT::Plugins::SolidInspector2
           }
         end
 
+        # Detect if the geometry self intersects.
+        self.time("Self Intersection") {
+          self.find_self_intersections(entities) { |edge, face, point|
+            errors << SolidErrors::SelfIntersecting.new(edge, face, point)
+          }
+        } # time
+
         # Detect if there are nested entities.
         self.time("Instance detection") {
           groups = entities.grep(Sketchup::Group)
@@ -150,6 +157,66 @@ module TT::Plugins::SolidInspector2
         end
       }
       nil
+    end
+
+
+    ON_FACE = Sketchup::Face::PointInside |
+              Sketchup::Face::PointOnVertex |
+              Sketchup::Face::PointOnEdge
+
+    def self.find_self_intersections(entities)
+      faces = entities.grep(Sketchup::Face)
+      entities.grep(Sketchup::Edge) { |edge|
+        edge_bounds = edge.bounds
+        faces.each { |face|
+          next if edge_bounds.intersect(face.bounds).empty?
+
+          point = Geom.intersect_line_plane(edge.line, face.plane)
+          next if point.nil?
+
+          classification = face.classify_point(point)
+          next if classification & ON_FACE == 0
+
+          next unless self.point_on_edge?(point, edge, false)
+
+          yield(edge, face, point)
+        }
+      }
+    end
+
+
+    # Checks if point +c+ is between point +a+ and +b+.
+    #
+    # Return true if +c+ is on +a+ or +b+.
+    #
+    # @param [Geom::Point3d] a
+    # @param [Geom::Point3d] b
+    # @param [Geom::Point3d] c
+    # @param [Geom::Point3d] on_point - When +true+, if point +c+ is at the same
+    #   position as +a+ or +b+ it is considered to be in between.
+    #
+    # @return [Boolean]
+    def self.between?(a, b, c, on_point = true)
+      return false unless c.on_line?([a,b])
+      v1 = c.vector_to(a)
+      v2 = c.vector_to(b)
+      if on_point
+        return true  if !v1.valid? || !v2.valid?
+      else
+        return false if !v1.valid? || !v2.valid?
+      end
+      !v1.samedirection?(v2)
+    end
+
+
+    # @param [Geom::Point3d] point
+    # @param [Sketchup::Edge] edge
+    #
+    # @return [Boolean]
+    def self.point_on_edge?(point, edge, on_vertex = true)
+      a = edge.start.position
+      b = edge.end.position
+      self.between?(a, b, point, on_vertex)
     end
 
 
