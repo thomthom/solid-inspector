@@ -166,20 +166,31 @@ module TT::Plugins::SolidInspector2
 
     def self.find_self_intersections(entities)
       faces = entities.grep(Sketchup::Face)
-      entities.grep(Sketchup::Edge) { |edge|
-        edge_bounds = edge.bounds
-        faces.each { |face|
-          next if edge_bounds.intersect(face.bounds).empty?
+      stack = Set.new(faces)
 
-          point = Geom.intersect_line_plane(edge.line, face.plane)
+      faces.each { |face1|
+
+        edges = Set.new
+
+        face1_bounds = face1.bounds
+        stack.delete(face1)
+        stack.each { |face2|
+          next if face1_bounds.intersect(face2.bounds).empty?
+          edges.merge(face2.edges)
+        }
+
+        edges.each { |edge|
+          next if face1_bounds.intersect(edge.bounds).empty?
+
+          point = Geom.intersect_line_plane(edge.line, face1.plane)
           next if point.nil?
 
-          classification = face.classify_point(point)
+          classification = face1.classify_point(point)
           next if classification & ON_FACE == 0
 
           next unless self.point_on_edge?(point, edge, false)
 
-          yield(edge, face, point)
+          yield(edge, face1, point)
         }
       }
     end

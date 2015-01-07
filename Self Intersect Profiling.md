@@ -24,3 +24,12 @@ ErrorFinder.find_errors
 > Instance detection took: 0.001s
 > Image detection took: 0.001s
 > Total analysis took: 0.768s
+
+# Face vs face bounds check
+
+ErrorFinder.find_errors
+> Resolving manifold took: 0.015s
+> Self Intersection took: 0.313017s
+> Instance detection took: 0.0s
+> Image detection took: 0.0s
+> Total analysis took: 0.33902s
