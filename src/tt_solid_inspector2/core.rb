@@ -40,7 +40,7 @@ module TT::Plugins::SolidInspector2
 
     if Settings.debug_mode?
       SKETCHUP_CONSOLE.show
-      puts "#{PLUGIN_NAME} in Debug mode..."
+      #puts "#{PLUGIN_NAME} in Debug mode..."
 
       debug_menu = menu.add_submenu("#{PLUGIN_NAME} Debug Tools")
 
@@ -58,16 +58,16 @@ module TT::Plugins::SolidInspector2
       }
 
       # Load profiling tests.
-      puts "Loading profile tests..."
+      #puts "Loading profile tests..."
 
       project_path = File.expand_path(File.join(__dir__, "..", ".."))
       profile_path = File.join(project_path, "profiling")
 
       filter = File.join(profile_path, 'PR_*.rb')
-      puts "> #{filter}"
+      #puts "> #{filter}"
 
       Dir.glob(filter).each { |file|
-        puts "> #{file}"
+        #puts "> #{file}"
         begin
           require file
         rescue LoadError => error
@@ -82,12 +82,12 @@ module TT::Plugins::SolidInspector2
       }
       "Generating menus for profiling tests..."
       if defined?(Profiling)
-        puts "> Profiling module found..."
+        #puts "> Profiling module found..."
         if defined?(SpeedUp)
-          puts "  > Found SpeedUp..."
+          #puts "  > Found SpeedUp..."
           SpeedUp.build_menus(menu_profile, Profiling)
         else
-          puts "  > Failed to find SpeedUp"
+          #puts "  > Failed to find SpeedUp"
           menu_profile.add_item("SpeedUp Not Found") {
             UI.messagebox("Install SpeedUp in order to run the profiling tests.")
           }
