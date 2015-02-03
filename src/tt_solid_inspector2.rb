@@ -33,7 +33,7 @@ module TT
   ### EXTENSION ### ------------------------------------------------------------
 
   unless file_loaded?(__FILE__)
-    loader = File.join(PATH, "core.rb")
+    loader = File.join(PATH, "bootstrap.rb")
     @extension = SketchupExtension.new(PLUGIN_NAME, loader)
     @extension.description = "Inspect and fix problems with geometry that "\
       "should be manifold (solids)."

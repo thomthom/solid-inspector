@@ -1,0 +1,113 @@
+html {
+  font-family: "Segoe UI", sans-serif;
+  font-size: 10pt;
+  color: #333;
+  background: #fff;
+  overflow: hidden;
+  cursor: default;
+}
+
+* {
+  cursor: inherit;
+}
+
+pre, code {
+  font-family: "Consolas", monospace;
+}
+
+input, select, textarea, a[href]
+{
+  cursor: auto;
+}
+
+h1, h2 {
+  margin: 0;
+}
+
+button, input {
+  font-family: "Segoe UI", sans-serif;
+}
+
+button {
+  padding: 0.5em 1em;
+  min-width: 7em;
+}
+
+input, textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.25em;
+}
+
+textarea {
+  height: 7em;
+}
+
+label {
+  display: block;
+  margin: 1em 0 0.25em 0;
+}
+
+a {
+  color: #4783ba;
+}
+a:active {
+  color: #ffb547;
+}
+
+#header {
+  margin: -1em -1em 0em -1em;
+  padding: 1em 1.5em 1em 2em;
+  background: #ffb547;
+  border-bottom: 1px solid #ca9;
+}
+
+#smiley {
+  float: right;
+  padding: 0 0.5em;
+  color: #666;
+}
+
+#content {
+  padding: 0.5em 1em;
+}
+
+
+#content > div {
+  position: relative;
+  left: 0;
+  right: 0;
+  /*background: #eee;*/
+}
+
+#footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1em 1.7em;
+  text-align: right;
+  background: #eee;
+  border-top: 1px solid #bbb;
+}
+
+#footer a {
+  margin-right: 1em;
+}
+
+.info_panel {
+  position: fixed;
+  left: 1em;
+  right: 1em;
+  top: 1em;
+  bottom: 6em;
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.95);
+  color: #fff;
+  padding: 2em;
+}
+
+hr {
+  border: none;
+  border-bottom: 1px dotted #fff;
+}

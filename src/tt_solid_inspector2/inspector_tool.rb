@@ -240,9 +240,8 @@ module TT::Plugins::SolidInspector2
       update_legends
       update_ui
       nil
-    rescue => error
-      ErrorWindow.handle(error)
-      raise
+    rescue Exception => exception
+      ERROR_REPORTER.handle(exception)
     end
 
 
@@ -472,9 +471,8 @@ module TT::Plugins::SolidInspector2
       all_errors_fixed = ErrorFinder.fix_errors(@errors, @entities)
       process_fix_all_results(all_errors_fixed)
       analyze
-    rescue => error
-      ErrorWindow.handle(error)
-      raise
+    rescue Exception => exception
+      ERROR_REPORTER.handle(exception)
     end
 
 
@@ -486,9 +484,8 @@ module TT::Plugins::SolidInspector2
       all_errors_fixed = ErrorFinder.fix_errors(errors, @entities)
       process_fix_results(all_errors_fixed, error_klass)
       analyze
-    rescue => error
-      ErrorWindow.handle(error)
-      raise
+    rescue Exception => exception
+      ERROR_REPORTER.handle(exception)
     end
 
 

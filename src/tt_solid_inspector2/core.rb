@@ -8,9 +8,6 @@
 
 
 module TT::Plugins::SolidInspector2
-  if Sketchup.version.to_i < 14
-    require File.join(PATH, "compatibility.rb")
-  else
 
   require File.join(PATH, "debug_tools.rb")
   require File.join(PATH, "error_window.rb")
@@ -98,10 +95,12 @@ module TT::Plugins::SolidInspector2
 
   def self.inspect_solid
     Sketchup.active_model.select_tool(InspectorTool.new)
+  rescue Exception => error
+    ERROR_REPORTER.handle(error)
   end
 
 
-  ### DEBUG ### ------------------------------------------------------------
+  ### DEBUG ### ----------------------------------------------------------------
 
   # @note Debug method to reload the plugin.
   #
@@ -126,7 +125,5 @@ module TT::Plugins::SolidInspector2
   ensure
     $VERBOSE = original_verbose
   end
-
-  end # if Sketchup.version
 
 end # module

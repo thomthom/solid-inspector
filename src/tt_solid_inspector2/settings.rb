@@ -29,6 +29,17 @@ module TT::Plugins::SolidInspector2
     end
 
 
+    # TT::Plugins::SolidInspector2::Settings.local_error_server = true
+    @local_error_server = self.read("LocalErrorServer", false)
+    def self.local_error_server?
+      @local_error_server
+    end
+    def self.local_error_server=(boolean)
+      @local_error_server = boolean ? true : false
+      self.write("LocalErrorServer", @local_error_server)
+    end
+
+
     @debug_legend_merge = self.read("DebugLegendMerge", false)
     def self.debug_legend_merge?
       @debug_legend_merge
