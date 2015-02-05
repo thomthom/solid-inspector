@@ -77,6 +77,23 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
+  def test_find_errors_model_Bracket_V2_skp
+    model = load_test_model("Bracket V2.skp")
+    instance = model.entities[0]
+    entities = instance.definition.entities
+
+    result = PLUGIN::ErrorFinder.find_errors(entities)
+
+    errors = result.grep(PLUGIN::SolidErrors::ReversedFace)
+    assert_equal(7, errors.size, "Unexpected number of ReversedFace")
+
+    errors = result.grep(PLUGIN::SolidErrors::ShortEdge)
+    assert_equal(344, errors.size, "Unexpected number of ShortEdges")
+
+    assert_equal(351, result.size, "Unexpected number of errors found")
+  end
+
+
   def test_find_errors_model_coil_skp
     model = load_test_model("coil.skp")
     instance = model.entities[0]
@@ -188,6 +205,20 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
+  def test_find_errors_model_Horse_skp
+    model = load_test_model("Horse.skp")
+    instance = model.entities[0]
+    entities = instance.definition.entities
+
+    result = PLUGIN::ErrorFinder.find_errors(entities)
+
+    errors = result.grep(PLUGIN::SolidErrors::ReversedFace)
+    assert_equal(55, errors.size, "Unexpected number of ReversedFace")
+
+    assert_equal(55, result.size, "Unexpected number of errors found")
+  end
+
+
   def test_find_errors_model_IncorrectReversedFaces_skp
     model = load_test_model("IncorrectReversedFaces.skp")
     instance = model.entities[0]
@@ -216,6 +247,23 @@ class TC_ErrorFinder < TestUp::TestCase
     result = PLUGIN::ErrorFinder.find_errors(entities)
 
     assert_equal(0, result.size, "Unexpected number of errors found")
+  end
+
+
+  def test_find_errors_model_new_build_skp
+    model = load_test_model("new build.skp")
+    instance = model.entities[0]
+    entities = instance.definition.entities
+
+    result = PLUGIN::ErrorFinder.find_errors(entities)
+
+    errors = result.grep(PLUGIN::SolidErrors::ReversedFace)
+    assert_equal(81, errors.size, "Unexpected number of ReversedFace")
+
+    errors = result.grep(PLUGIN::SolidErrors::InternalFace)
+    assert_equal(6, errors.size, "Unexpected number of InternalFaces")
+
+    assert_equal(87, result.size, "Unexpected number of errors found")
   end
 
 

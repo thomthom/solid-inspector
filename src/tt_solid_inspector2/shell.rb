@@ -202,6 +202,7 @@ module TT::Plugins::SolidInspector2
     # @return [Sketchup::Face]
     def get_other_face(edge, face)
       other_face = edge.faces.find { |edge_face| edge_face != face }
+      return nil if other_face.nil? # Edge connected to same face.
       if edge_reversed_in?(edge, face) == edge_reversed_in?(edge, other_face)
         reverse_face(other_face)
       end
@@ -218,7 +219,16 @@ module TT::Plugins::SolidInspector2
     # @return [Sketchup::Face]
     def find_other_shell_face(edge, face)
       return nil if edge.faces.size == 1
+
+      # If there is only two connected faces the other face is a easy choice.
       return get_other_face(edge, face) if edge.faces.size == 2
+
+      # If there are more faces we need to figure out which one is the other
+      # shell face.
+
+      # Make sure to account for edges that might connect to itself multiple
+      # times.
+      return nil if edge.faces.count(face) > 1
 
       edge_direction = edge_vector(edge, face)
       face_direction = face_normal(face)
@@ -285,6 +295,7 @@ module TT::Plugins::SolidInspector2
             processed << edge
             other_shell_face = find_other_shell_face(edge, face)
 
+            next if other_shell_face.nil?
             next if processed.include?(other_shell_face)
 
             stack << other_shell_face
