@@ -23,19 +23,19 @@ module TT::Plugins::SolidInspector2
     # @param [Sketchup::Entities] entities
     def initialize(entities)
       @entities = entities
-      @shell_faces = Set.new
-      @internal_faces = Set.new
-      @external_faces = Set.new
-      @reversed_faces = Set.new
+      @shell_faces = nil
+      @internal_faces = nil
+      @external_faces = nil
+      @reversed_faces = nil
     end
 
 
     # @return [Nil]
     def resolve
-      @internal_faces.clear
-      @external_faces.clear
-      @reversed_faces.clear
-      @shell_faces.clear
+      @shell_faces = Set.new
+      @internal_faces = Set.new
+      @external_faces = Set.new
+      @reversed_faces = Set.new
 
       # First we resolve a shell for faces oriented "outwards".
       shell_front = Set.new
@@ -43,6 +43,8 @@ module TT::Plugins::SolidInspector2
         start_face = find_start_face(geometry_group, true)
         next if start_face.nil?
         shell_front.merge(find_shell(start_face))
+
+        # TODO: Perform both passes within this block.
       }
       # From this set of faces we can deduce the internal faces for this shell.
       # Note that this shell set might contain external faces, "flaps".
@@ -65,17 +67,34 @@ module TT::Plugins::SolidInspector2
       }
 
       # From the two sets we can resolve the actual shell which form a manifold.
-      shell = shell_front.intersection(shell_back)
+      @shell_faces = shell_front.intersection(shell_back)
 
       # Given the final shell and the internal faces found we now know which
       # faces are external.
       @external_faces = Set.new(faces).subtract(@internal_faces)
-                                      .subtract(shell)
+                                      .subtract(@shell_faces)
 
       # Restore the set of reversed faces so we can correctly orient the
       # manifold.
-      @reversed_faces = shell.intersection(temp_reversed_faces)
+      @reversed_faces = @shell_faces.intersection(temp_reversed_faces)
       nil
+    end
+
+
+    def valid?
+      if @shell_faces.nil?
+        raise RuntimeError, "`resolve` must be called before calling `valid?`"
+      end
+      @shell_faces.size > 0 && @shell_faces.all? { |face|
+        face.edges.all? { |edge|
+          faces = edge.faces.select { |f| @shell_faces.include?(f) }
+          # Because there is the odd chance of an edge connected to more than
+          # two faces we only check for edges that is connected to LESS than two
+          # shell faces. Not sure if this is free of false positives, but all
+          # the current test models pass this correctly.
+          faces.size > 1
+        }
+      }
     end
 
 

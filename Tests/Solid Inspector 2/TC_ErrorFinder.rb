@@ -251,6 +251,20 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
+  def test_find_errors_model_ManifoldEdgeCase2_skp
+    model = load_test_model("ManifoldEdgeCase2.skp")
+    instance = model.entities[0]
+    entities = instance.entities
+
+    result = PLUGIN::ErrorFinder.find_errors(entities)
+
+    errors = result.grep(PLUGIN::SolidErrors::InternalFaceEdge)
+    assert_equal(5, errors.size, "Unexpected number of InternalFaceEdges")
+
+    assert_equal(5, result.size, "Unexpected number of errors found")
+  end
+
+
   def test_find_errors_model_new_build_skp
     model = load_test_model("new build.skp")
     instance = model.entities[0]
@@ -492,13 +506,16 @@ class TC_ErrorFinder < TestUp::TestCase
     errors = result.grep(PLUGIN::SolidErrors::StrayEdge)
     assert_equal(3, errors.size, "Unexpected number of StrayEdges")
 
-    errors = result.grep(PLUGIN::SolidErrors::InternalFace)
-    assert_equal(1, errors.size, "Unexpected number of InternalFaces")
+    errors = result.grep(PLUGIN::SolidErrors::SurfaceBorder)
+    assert_equal(4, errors.size, "Unexpected number of SurfaceBorders")
 
-    errors = result.grep(PLUGIN::SolidErrors::ReversedFace)
-    assert_equal(1, errors.size, "Unexpected number of ReversedFaces")
+    errors = result.grep(PLUGIN::SolidErrors::FaceHole)
+    assert_equal(1, errors.size, "Unexpected number of InternalFaceEdges")
 
-    assert_equal(5, result.size, "Unexpected number of errors found")
+    errors = result.grep(PLUGIN::SolidErrors::InternalFaceEdge)
+    assert_equal(4, errors.size, "Unexpected number of InternalFaceEdges")
+
+    assert_equal(12, result.size, "Unexpected number of errors found")
   end
 
 
