@@ -225,6 +225,30 @@ module TT::Plugins::SolidInspector2
     end # class
 
 
+    # The face is located on the inside of what could be a manifold mesh.
+    class ExternalFace < SolidError
+
+      include EraseToFix
+
+      def self.display_name
+        "External Faces"
+      end
+
+      def self.description
+        "External faces are faces located on the outside of a mesh that should "\
+        "be a solid. These are automatically fixed by erasing the internal "\
+        "faces."
+      end
+
+      def draw(view, transformation = nil)
+        view.drawing_color = ERROR_COLOR_FACE
+        draw_face(view, @entities[0], transformation)
+        nil
+      end
+
+    end # class
+
+
     # The face is not oriented consistently with the rest of the surface of the
     # manifold. It is facing "inwards" and should be reversed.
     class ReversedFace < SolidError

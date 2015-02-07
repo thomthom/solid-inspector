@@ -61,20 +61,23 @@ module TT::Plugins::SolidInspector2
         if mesh_border_edges.size > 0
           Sketchup.status_text = "Sorting surface borders..."
           self.group_connected_edges(mesh_border_edges).each { |edges|
-            errors << SolidErrors::SurfaceBorder.new(edges)
+            # TODO: Remove or find alternative.
+            #errors << SolidErrors::SurfaceBorder.new(edges)
           }
         end
 
         if hole_edges.size > 0
           Sketchup.status_text = "Sorting face holes..."
           self.group_connected_edges(hole_edges).each { |edges|
-            errors << SolidErrors::FaceHole.new(edges)
+            # TODO: Remove or find alternative.
+            #errors << SolidErrors::FaceHole.new(edges)
           }
         end
 
         is_manifold = all_faces.size > 0 &&
                       mesh_border_edges.empty? &&
                       hole_edges.empty?
+        is_manifold = all_faces.size > 0 # TESTING!
 
         if is_manifold
           Sketchup.status_text = "Resolving manifold..."
@@ -82,9 +85,14 @@ module TT::Plugins::SolidInspector2
           self.time("Resolving manifold") {
             shell = Shell.new(entities)
             shell.resolve
+            # TODO: Perform a validation of the Shell finder's results.
 
             shell.internal_faces.each { |face|
               errors << SolidErrors::InternalFace.new(face)
+            }
+
+            shell.external_faces.each { |face|
+              errors << SolidErrors::ExternalFace.new(face)
             }
 
             shell.reversed_faces.each { |face|
