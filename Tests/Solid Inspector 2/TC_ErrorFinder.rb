@@ -112,8 +112,6 @@ class TC_ErrorFinder < TestUp::TestCase
 
     result = PLUGIN::ErrorFinder.find_errors(entities)
 
-    # TODO: This model needs research. It has holes and tiny faces.
-
     errors = result.grep(PLUGIN::SolidErrors::StrayEdge)
     assert_equal(120, errors.size, "Unexpected number of StrayEdges")
 
@@ -211,10 +209,11 @@ class TC_ErrorFinder < TestUp::TestCase
 
     result = PLUGIN::ErrorFinder.find_errors(entities)
 
-    # TODO: This model produce false positives when we detect external faces.
+    errors = result.grep(PLUGIN::SolidErrors::ExternalFace)
+    assert_equal(53, errors.size, "Unexpected number of ExternalFaces")
 
     errors = result.grep(PLUGIN::SolidErrors::ReversedFace)
-    assert_equal(55, errors.size, "Unexpected number of ReversedFace")
+    assert_equal(2, errors.size, "Unexpected number of ReversedFace")
 
     assert_equal(55, result.size, "Unexpected number of errors found")
   end
@@ -258,10 +257,10 @@ class TC_ErrorFinder < TestUp::TestCase
 
     result = PLUGIN::ErrorFinder.find_errors(entities)
 
-    errors = result.grep(PLUGIN::SolidErrors::InternalFaceEdge)
-    assert_equal(5, errors.size, "Unexpected number of InternalFaceEdges")
+    errors = result.grep(PLUGIN::SolidErrors::InternalFace)
+    assert_equal(1, errors.size, "Unexpected number of InternalFaces")
 
-    assert_equal(5, result.size, "Unexpected number of errors found")
+    assert_equal(1, result.size, "Unexpected number of errors found")
   end
 
 
