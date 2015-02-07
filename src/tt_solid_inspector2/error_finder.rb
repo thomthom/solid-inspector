@@ -39,7 +39,6 @@ module TT::Plugins::SolidInspector2
 
         Sketchup.status_text = "Inspecting edges..."
 
-        # First check the edges.
         entities.grep(Sketchup::Edge) { |edge|
           num_faces = edge.faces.size
           if num_faces == 0
@@ -56,44 +55,37 @@ module TT::Plugins::SolidInspector2
           end
         }
 
-        Sketchup.status_text = "Analyzing edges..."
+        Sketchup.status_text = "Resolving manifold..."
 
-        if mesh_border_edges.size > 0
+        shell = Shell.new(entities)
+
+        self.time("Resolving manifold") {
+          shell.resolve
+        } # time
+
+        if shell.valid?
+          shell.internal_faces.each { |face|
+            errors << SolidErrors::InternalFace.new(face)
+          }
+          shell.external_faces.each { |face|
+            errors << SolidErrors::ExternalFace.new(face)
+          }
+          shell.reversed_faces.each { |face|
+            errors << SolidErrors::ReversedFace.new(face)
+          }
+        else
+          Sketchup.status_text = "Analyzing edges..."
+
           Sketchup.status_text = "Sorting surface borders..."
           self.group_connected_edges(mesh_border_edges).each { |edges|
             errors << SolidErrors::SurfaceBorder.new(edges)
           }
-        end
 
-        if hole_edges.size > 0
           Sketchup.status_text = "Sorting face holes..."
           self.group_connected_edges(hole_edges).each { |edges|
             errors << SolidErrors::FaceHole.new(edges)
           }
-        end
 
-        is_manifold = all_faces.size > 0 &&
-                      mesh_border_edges.empty? &&
-                      hole_edges.empty?
-
-        if is_manifold
-          Sketchup.status_text = "Resolving manifold..."
-
-          self.time("Resolving manifold") {
-            shell = Shell.new(entities)
-            shell.resolve
-
-            shell.internal_faces.each { |face|
-              errors << SolidErrors::InternalFace.new(face)
-            }
-
-            shell.reversed_faces.each { |face|
-              errors << SolidErrors::ReversedFace.new(face)
-            }
-          } # time
-        else
-          # Cannot determine what faces are internal until all holes in the mesh
-          # is closed.
           edges_with_internal_faces.each { |edge|
             errors << SolidErrors::InternalFaceEdge.new(edge)
           }
