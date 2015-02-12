@@ -17,41 +17,84 @@ module TT::Plugins::SolidInspector2
     PI2 = Math::PI * 2
 
 
-    attr_reader :internal_faces, :reversed_faces
+    attr_reader :internal_faces, :external_faces, :reversed_faces
 
 
     # @param [Sketchup::Entities] entities
     def initialize(entities)
       @entities = entities
-      @shell_faces = Set.new
-      @internal_faces = Set.new
-      @reversed_faces = Set.new
+      @shell_faces = nil
+      @internal_faces = nil
+      @external_faces = nil
+      @reversed_faces = nil
     end
 
 
     # @return [Nil]
     def resolve
-      @internal_faces.clear
-      @reversed_faces.clear
       @shell_faces = Set.new
+      @internal_faces = Set.new
+      @external_faces = Set.new
+      @reversed_faces = Set.new
 
+      # First we resolve a shell for faces oriented "outwards".
+      shell_front = Set.new
       find_geometry_groups(@entities) { |geometry_group|
         start_face = find_start_face(geometry_group, true)
         next if start_face.nil?
-        @shell_faces.merge(find_shell(start_face))
+        shell_front.merge(find_shell(start_face))
+
+        # TODO: Perform both passes within this block.
+      }
+      # From this set of faces we can deduce the internal faces for this shell.
+      # Note that this shell set might contain external faces, "flaps".
+      # `@internal_faces` will be used in the next pass to skip these faces as
+      # they have been already determined to be undesired.
+      faces = @entities.grep(Sketchup::Face)
+      @internal_faces = Set.new(faces).subtract(shell_front)
+
+      # Because `find_shell` modify the `@reversed_faces` array we back up the
+      # set so we can restore it afterwards otherwise we get incorrect results.
+      temp_reversed_faces = @reversed_faces.dup
+
+      # We then make a new pass an resolve a new shell looking for normals
+      # in the opposite direction. This allow us to detect external faces.
+      shell_back = Set.new
+      find_geometry_groups(@entities) { |geometry_group|
+        start_face = find_start_face(geometry_group, false)
+        next if start_face.nil?
+        shell_back.merge(find_shell(start_face))
       }
 
-      # Trying to resolve "external" faces appear to yield incorrect results.
-      # For now this is disabled until the functionality of 2.1 is restored.
-      #start_face = find_start_face(@entities, false)
-      #@shell_faces.merge(find_shell(start_face))
+      # From the two sets we can resolve the actual shell which form a manifold.
+      @shell_faces = shell_front.intersection(shell_back)
 
-      # TODO: Is @reversed_faces ensured to return faces that only belong to the
-      # shell or can the collection contain faces from @internal_faces?
+      # Given the final shell and the internal faces found we now know which
+      # faces are external.
+      @external_faces = Set.new(faces).subtract(@internal_faces)
+                                      .subtract(@shell_faces)
 
-      faces = @entities.grep(Sketchup::Face)
-      @internal_faces = Set.new(faces).subtract(@shell_faces)
+      # Restore the set of reversed faces so we can correctly orient the
+      # manifold.
+      @reversed_faces = @shell_faces.intersection(temp_reversed_faces)
       nil
+    end
+
+
+    def valid?
+      if @shell_faces.nil?
+        raise RuntimeError, "`resolve` must be called before calling `valid?`"
+      end
+      @shell_faces.size > 0 && @shell_faces.all? { |face|
+        face.edges.all? { |edge|
+          faces = edge.faces.select { |f| @shell_faces.include?(f) }
+          # Because there is the odd chance of an edge connected to more than
+          # two faces we only check for edges that is connected to LESS than two
+          # shell faces. Not sure if this is free of false positives, but all
+          # the current test models pass this correctly.
+          faces.size > 1
+        }
+      }
     end
 
 
@@ -75,6 +118,14 @@ module TT::Plugins::SolidInspector2
         stack = stack - geometry_group
       end
       num_groups
+    end
+
+
+    # @param [#faces] entity
+    #
+    # @return [Array<Sketchup::Face>]
+    def get_faces(entity)
+      entity.faces.reject { |face| @internal_faces.include?(face) }
     end
 
 
@@ -140,7 +191,7 @@ module TT::Plugins::SolidInspector2
       entities.grep(Sketchup::Edge) { |edge|
         vertices.merge(edge.vertices)
       }
-      vertices.delete_if { |vertex| vertex.faces.empty? }
+      vertices.delete_if { |vertex| get_faces(vertex).empty? }
       return nil if vertices.empty?
 
       # 1) Pick the vertex (v) with max z component.
@@ -149,13 +200,13 @@ module TT::Plugins::SolidInspector2
       }
 
       # 2) For v, pick the attached edge (e) least aligned with the z axis.
-      edges = max_z_vertex.edges.delete_if { |edge| edge.faces.empty? }
+      edges = max_z_vertex.edges.delete_if { |edge| get_faces(edge).empty? }
       edge = edges.min { |a, b|
         edge_normal_z_component(a) <=> edge_normal_z_component(b)
       }
 
       # 3) For e, pick the face attached with maximum |z| normal component.
-      face = edge.faces.max { |a, b|
+      face = get_faces(edge).max { |a, b|
         face_normal(a).z.abs <=> face_normal(b).z.abs
       }
 
@@ -201,7 +252,8 @@ module TT::Plugins::SolidInspector2
     #
     # @return [Sketchup::Face]
     def get_other_face(edge, face)
-      other_face = edge.faces.find { |edge_face| edge_face != face }
+      other_face = get_faces(edge).find { |edge_face| edge_face != face }
+      return nil if other_face.nil? # Edge connected to same face.
       if edge_reversed_in?(edge, face) == edge_reversed_in?(edge, other_face)
         reverse_face(other_face)
       end
@@ -217,8 +269,17 @@ module TT::Plugins::SolidInspector2
     #
     # @return [Sketchup::Face]
     def find_other_shell_face(edge, face)
-      return nil if edge.faces.size == 1
-      return get_other_face(edge, face) if edge.faces.size == 2
+      return nil if get_faces(edge).size == 1
+
+      # If there is only two connected faces the other face is a easy choice.
+      return get_other_face(edge, face) if get_faces(edge).size == 2
+
+      # If there are more faces we need to figure out which one is the other
+      # shell face.
+
+      # Make sure to account for edges that might connect to itself multiple
+      # times.
+      return nil if get_faces(edge).count(face) > 1
 
       edge_direction = edge_vector(edge, face)
       face_direction = face_normal(face)
@@ -228,7 +289,7 @@ module TT::Plugins::SolidInspector2
       minimum_angle = PI2
       shell_face = nil
 
-      edge.faces.each { |other_face|
+      get_faces(edge).each { |other_face|
         next if other_face == face
 
         other_face_direction = face_normal(other_face)
@@ -280,11 +341,12 @@ module TT::Plugins::SolidInspector2
         # Look for neighbouring shell faces.
         face.loops.each { |loop|
           loop.edges.each { |edge|
-            next if processed.include?(edge) || edge.faces.size < 2
+            next if processed.include?(edge) || get_faces(edge).size < 2
 
             processed << edge
             other_shell_face = find_other_shell_face(edge, face)
 
+            next if other_shell_face.nil?
             next if processed.include?(other_shell_face)
 
             stack << other_shell_face
