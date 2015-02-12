@@ -16,15 +16,15 @@ module TT::Plugins::SolidInspector2
     require File.join(PATH, "error_reporter", "error_reporter.rb")
 
     server = if Settings.local_error_server?
-      "http://sketchup.thomthom.local/extensions/report_error"
+      "sketchup.thomthom.local"
     else
-      "http://sketchup.thomthom.net/extensions/report_error"
+      "sketchup.thomthom.net"
     end
 
     config = {
       :extension_id => PLUGIN_ID,
       :extension    => @extension,
-      :server       => server,
+      :server       => "http://#{server}/api/v1/extension/report_error",
       :support_url  => "http://www.thomthom.net/software/example/support",
       :debug        => Settings.debug_mode?
     }
