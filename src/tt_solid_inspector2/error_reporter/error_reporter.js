@@ -7,8 +7,8 @@
 
 
 window.onerror = function(message, location, line_number) {
-  // TODO: Handle this better for release build.
-  debugger;
+  //debugger;
+  alert(message + "\n\n" + location + "\n\nLine: " + line_number);
 }
 
 
@@ -28,9 +28,12 @@ var UI = function() {
     redirect_links : function() {
       $(document).on('click', 'a[href]', function()
       {
-        Sketchup.callback("open_url", { url: this.href });
-        return false;
-      } );
+        // Detect skp: actions and don't intercept them.
+        if (this.href.indexOf("skp:") != 0) {
+          Sketchup.callback("open_url", { url: this.href });
+          return false;
+        }
+      });
     },
 
 
@@ -117,9 +120,26 @@ var Bridge = function() {
       var $bridge = $("#SU_BRIDGE");
       $bridge.text("");
       if (data !== undefined) {
-        var json = JSON.stringify(data);
+        try {
+          var json = JSON.stringify(data);
+        } catch(exception) {
+          var json = Bridge.fallback_json_stringify(data);
+        }
         $bridge.text(json);
       }
+    },
+
+
+    fallback_json_stringify : function(data) {
+      // Unfortunatly we're still stuck with some installations of IE7 and IE6
+      // that cause problems. This is a very naive fallback for these versions.
+      var json = [];
+      $.each(data, function(key, value) {
+        escaped_key   = key.replace(/"/g, '\\"');
+        escaped_value = value.replace(/"/g, '\\"');
+        json.push('"' + escaped_key + '": "' + escaped_value + '"' );
+      });
+      return '{' + json.join(', ') + '}';
     }
 
   };
@@ -135,7 +155,8 @@ var Bridge = function() {
 
 
 // http://stackoverflow.com/a/27064127/486990
-// The web service that answers these calls also responds with 'Access-Control-Allow-Origin: *' header.
+// The web service that answers these calls also responds with
+// 'Access-Control-Allow-Origin: *' header.
 $.support.cors = true;
 
 var error_data_;
@@ -199,6 +220,16 @@ function restore_form(data)
 }
 
 
+function action_button()
+{
+  if ($("#submit").text() == "Close") {
+    save_and_close();
+  } else {
+    submit_error_report();
+  }
+}
+
+
 function submit_error_report()
 {
   var data = prepare_error_data(error_data_);
@@ -209,34 +240,82 @@ function submit_error_report()
     data: data
   })
   .done(function(response, status, xhr) {
-    var message = JSON.stringify(response);
-    display_response(message, status, xhr.status);
-    //save_and_close();
+    display_response(xhr, status);
+    display_close_button();
   })
   .fail(function(xhr, status, errorThrown) {
-    display_response(errorThrown, status, xhr.status);
+    display_response(xhr, status);
+    $("#submit").prop("disabled", false);
   });
 
   disable_form();
-
-  // TODO: Pass name and email back to Ruby so they can be remembered.
+  display_loader();
 
   return false;
 }
 
 
-function display_response(message, status, http_code)
+function display_loader()
 {
-  if (error_data_.config.debug)
-  {
-    var $message = $("<div/>");
-    $message.attr("id", "response");
-    $message.addClass("info_panel");
-    $message.append($("<h2>" + status + " (" + http_code + ")</h2>"))
-    $message.append($("<hr/>"))
-    $message.append($("<pre/>").text(message));
-    $("body").append($message);
+  $("#response").detach();
+
+  var $message = $("<div/>");
+  $message.attr("id", "response");
+  $message.addClass("info_panel");
+
+  var $status = $("<div />");
+  $status.addClass("status")
+
+  var $load_indicator = $("<img />");
+  $load_indicator.attr("src", "loading.gif");
+  $status.append($load_indicator);
+
+  $status.append($("<p>Sending report...</p>"));
+
+  $message.append($status);
+
+  $("body").append($message);
+}
+
+
+function display_close_button()
+{
+  $("#submit").text("Close");
+  $("#submit").prop("disabled", false);
+}
+
+
+function display_response(xhr, status)
+{
+  var http_code = xhr.status;
+
+  try {
+    var json = jQuery.parseJSON(xhr.responseText);
+    var message = json.message;
+  } catch(exception) {
+    var message = "Unexpected error. Please try again. If the problem \
+      persist then please contact the developer.";
   }
+
+  var title = "Error Report Submitted";
+  var type = "success";
+  if (http_code != 200) {
+    title = "Failed to Submit Error Report";
+    type = "error";
+    message = "<p><b>Error Code:</b> " + http_code + "</p>" + message;
+  }
+
+  var $title = $("<h2>" + title + "</h2>");
+  $title.addClass(type);
+
+  var $response = $("<div class='response' />").html(message);
+
+  var $message = $("#response");
+  $message.text("");
+
+  $message.append($title)
+  $message.append($("<hr/>"))
+  $message.append($response);
 }
 
 
@@ -288,7 +367,7 @@ $(document).ready(function() {
   UI.redirect_links();
 
   $("#privacy_link").on("click", toggle_privacy_info);
-  $("#submit").on("click", submit_error_report);
+  $("#submit").on("click", action_button);
 
   Sketchup.callback("dialog_ready");
 });

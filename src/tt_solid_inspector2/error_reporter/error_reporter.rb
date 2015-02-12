@@ -17,14 +17,22 @@ module TT::Plugins::SolidInspector2
     # @option config [SketchupExtension] :extension
     # @option config [String] :server
     # @option config [String] :support_url
+    # @option config [String] :debug (false)
+    # @option config [String] :test (false) Set to true to log errors as test
+    #                                       data in the database.
     def initialize(config)
       @extension_id = get_required_config(config, :extension_id)
       @extension    = get_required_config(config, :extension)
       @server       = get_required_config(config, :server)
       @debug        = get_optional_config(config, :debug, false)
+      @test         = get_optional_config(config, :test, false)
       @support_url  = config[:support_url]
       @window       = nil
       @events       = {}
+    rescue Exception => exception
+      # Here we actually raise the exception because this happen during the
+      # setup phase and should not be done as part of an exception handling.
+      raise handle_unexpected_exception(exception)
     end
 
     # @param [Exception] exception
@@ -50,6 +58,8 @@ module TT::Plugins::SolidInspector2
       else
         false
       end
+    rescue Exception => exception
+      handle_unexpected_exception(exception)
     end
 
 
@@ -114,6 +124,8 @@ module TT::Plugins::SolidInspector2
         @window.show
       end
       true
+    rescue Exception => exception
+      handle_unexpected_exception(exception)
     end
 
     # @param [UI::WebDialog] window
@@ -128,7 +140,7 @@ module TT::Plugins::SolidInspector2
           :debug => @debug
         },
 
-        :test => @debug,
+        :test => @test,
 
         :extension => {
           :id => @extension_id,
@@ -242,26 +254,26 @@ module TT::Plugins::SolidInspector2
       }
 
       on("open_url") { |dialog, data|
-        UI.openURL(data[:url])
-        dialog = nil
+        UI.openURL(data["url"])
+        dialog = data = nil
       }
 
       on("dialog_ready") { |dialog, data|
         section = preference_key
-        data = {
+        user_data = {
           :user_name => Sketchup.read_default(section, "name",  ""),
           :user_email => Sketchup.read_default(section, "email", "")
         }
-        call(dialog, "restore_form", data);
-        dialog = nil
+        call(dialog, "restore_form", user_data);
+        dialog = data = nil
       }
 
       on("save_and_close") { |dialog, data|
         section = preference_key
         Sketchup.write_default(section, "name",  data["name"].to_s)
         Sketchup.write_default(section, "email", data["email"].to_s)
-        dialog.close #unless @debug
-        dialog = nil
+        dialog.close
+        dialog = data = nil
       }
 
       window.set_file(File.join(__dir__, "error_reporter.html"))
@@ -285,6 +297,8 @@ module TT::Plugins::SolidInspector2
       else
         false
       end
+    rescue Exception => exception
+      handle_unexpected_exception(exception)
     end
 
     # @return [Boolean]
@@ -309,7 +323,38 @@ module TT::Plugins::SolidInspector2
     #
     # @return [String]
     def get_utf8_list(enumerator)
-      enumerator.dup.map { |path| path.dup.force_encoding("UTF-8") }
+      enumerator.dup.map { |path|
+        string = path.dup
+        begin
+          string.encode("UTF-8")
+        rescue
+          # Under Windows there are multiple strings relating to files that
+          # can ahve the incorrect encoding applied. They appear to generally
+          # be UTF-8 data with the wrong encoding label. To account for this we
+          # assume that any transcoding error to UTF-8 is a result of
+          # mis-labelled UTF-8 strings and then fall back to forcing the
+          # encoding.
+          string.force_encoding("UTF-8")
+        end
+        string
+      }
+    end
+
+    # Handling errors in the error handler - how meta!
+    #
+    # Because this would happen when we are setting up the dialog when handling
+    # an existing exception we simply output these errors to the console so
+    # the user sees that something happened. Hopefully the user will report the
+    # problem back to the developer.
+    #
+    # @param [Exception] exception
+    #
+    # @return [Exception]
+    def handle_unexpected_exception(exception)
+      SKETCHUP_CONSOLE.show
+      p exception
+      puts exception.backtrace.join("\n")
+      exception
     end
 
   end # class
