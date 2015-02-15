@@ -20,7 +20,7 @@ module TT
   PLUGIN          = self
   PLUGIN_ID       = "TT_SolidInspector2".freeze
   PLUGIN_NAME     = "Solid Inspector²".freeze
-  PLUGIN_VERSION  = "2.3.0".freeze
+  PLUGIN_VERSION  = "2.4.0".freeze
 
   # Resource paths
   file = __FILE__.dup
