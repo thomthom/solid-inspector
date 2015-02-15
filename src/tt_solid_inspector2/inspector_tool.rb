@@ -50,6 +50,8 @@ module TT::Plugins::SolidInspector2
       Sketchup.active_model.active_view.invalidate
       update_ui
       nil
+    rescue Exception => exception
+      ERROR_REPORTER.handle(exception)
     end
 
 
@@ -60,6 +62,8 @@ module TT::Plugins::SolidInspector2
       end
       view.invalidate
       nil
+    rescue Exception => exception
+      ERROR_REPORTER.handle(exception)
     end
 
 
@@ -68,6 +72,8 @@ module TT::Plugins::SolidInspector2
       view.invalidate
       update_ui
       nil
+    rescue Exception => exception
+      ERROR_REPORTER.handle(exception)
     end
 
 
@@ -78,6 +84,8 @@ module TT::Plugins::SolidInspector2
         view.tooltip = legend ? legend.tooltip : ""
       end
       nil
+    rescue Exception => exception
+      ERROR_REPORTER.handle(exception)
     end
 
 
@@ -111,6 +119,8 @@ module TT::Plugins::SolidInspector2
       analyze
       view.invalidate
       nil
+    rescue Exception => exception
+      ERROR_REPORTER.handle(exception)
     end
 
 
@@ -164,16 +174,22 @@ module TT::Plugins::SolidInspector2
 
       view.invalidate
       false # Returning true would cancel the key event.
+    rescue Exception => exception
+      ERROR_REPORTER.handle(exception)
     end
 
 
     if Sketchup.version.to_i < 15
       def getMenu(menu)
         context_menu(menu)
+      rescue Exception => exception
+        ERROR_REPORTER.handle(exception)
       end
     else
       def getMenu(menu, flags, x, y, view)
         context_menu(menu, flags, x, y, view)
+      rescue Exception => exception
+        ERROR_REPORTER.handle(exception)
       end
     end
 
@@ -197,6 +213,8 @@ module TT::Plugins::SolidInspector2
         legend.draw(view)
       }
       nil
+    rescue Exception => exception
+      ERROR_REPORTER.handle(exception)
     end
 
 
@@ -454,6 +472,8 @@ module TT::Plugins::SolidInspector2
       #p [method, key]
       send(method, key, repeat, flags, view)
       nil
+    rescue Exception => exception
+      ERROR_REPORTER.handle(exception)
     end
 
 
@@ -516,6 +536,8 @@ module TT::Plugins::SolidInspector2
       end
       @current_error = nil
       nil
+    rescue Exception => exception
+      ERROR_REPORTER.handle(exception)
     end
 
 
