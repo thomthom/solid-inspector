@@ -232,7 +232,7 @@ module TT::Plugins::SolidInspector2
     # Construct a vector along the edge in the face's loop direction.
     #
     # @param [Sketchup::Edge] edge
-    # @param [Sketchup::Face] f
+    # @param [Sketchup::Face] face
     #
     # @return [Geom::Vector3d]
     def edge_vector(edge, face)
