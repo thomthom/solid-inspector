@@ -431,15 +431,20 @@ module TT::Plugins::SolidInspector2
 
       error = filtered_errors[@current_error]
 
-      vertices = Set.new
+      points = Set.new
       error.entities.each { |entity|
         if entity.respond_to?(:vertices)
-          vertices.merge(entity.vertices)
+          points.merge(entity.vertices)
+        else
+          bounds = entity.bounds
+          boundingbox_points = (0..7).map { |i| bounds.corner(i) }
+          points.merge(boundingbox_points)
         end
       }
 
-      screen_points = vertices.to_a.map { |vertex|
-        world_point = vertex.position.transform(@transformation)
+      screen_points = points.to_a.map { |point|
+        point = point.position if point.is_a?(Sketchup::Vertex)
+        world_point = point.transform(@transformation)
         screen_point = view.screen_coords(world_point)
         screen_point.z = 0 # TODO: Share code with DrawingHelper.
         screen_point
