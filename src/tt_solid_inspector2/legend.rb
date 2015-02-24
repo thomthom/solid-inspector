@@ -36,11 +36,9 @@ module TT::Plugins::SolidInspector2
       unless legend.is_a?(Legend)
         raise TypeError, "Must be enother #{self.class}"
       end
-      if Sketchup.version.to_i < 15
-        raise NotImplementedError, "Need to implement SU2014 workaround."
-      else
-        !bounds(view).intersect(legend.bounds(view)).empty?
-      end
+      bounds1 = bounds(view)
+      bounds2 = legend.bounds(view)
+      bounds_intersect?(bounds1, bounds2)
     end
 
     # return [Integer] Leader length in pixels
@@ -65,11 +63,7 @@ module TT::Plugins::SolidInspector2
     def on_screen?(view)
       screen = Geom::BoundingBox.new
       screen.add(ORIGIN, [view.vpwidth, view.vpheight, 0])
-      if Sketchup.version.to_i < 15
-        raise NotImplementedError, "Need to implement SU2014 workaround."
-      else
-        !screen.intersect(bounds(view)).empty?
-      end
+      bounds_intersect?(screen, bounds(view))
     end
 
     # return [Geom::Point3d]
@@ -113,6 +107,31 @@ module TT::Plugins::SolidInspector2
     # @param [Sketchup::View] view
     def draw_icon(offset, view)
       raise NotImplementedError
+    end
+
+    private
+
+    # Wrapper method to handle SketchUp 2014 and older which had a bugged
+    # implementation of Geom::BoundingBox.intersect
+    #
+    # @param [Geom::BoundingBox] bounds1
+    # @param [Geom::BoundingBox] bounds2
+    #
+    # @return [Boolean]
+    def bounds_intersect?(bounds1, bounds2)
+      if Sketchup.version.to_i < 15
+        return false if bounds1.empty? || bounds2.empty?
+
+        return false if bounds1.max.x < bounds2.min.x
+        return false if bounds1.min.x > bounds2.max.x
+
+        return false if bounds1.max.y < bounds2.min.y
+        return false if bounds1.min.y > bounds2.max.y
+
+        return false if bounds1.max.z < bounds2.min.z
+        return false if bounds1.min.z > bounds2.max.z
+      end
+      !bounds1.intersect(bounds2).empty?
     end
 
   end # class Legend
