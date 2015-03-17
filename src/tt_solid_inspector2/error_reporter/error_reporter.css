@@ -224,3 +224,29 @@ textarea {
 #footer a {
   margin-right: 1em;
 }
+
+
+/*******************************************************************************
+ *
+ * $MESSAGES
+ *
+ ******************************************************************************/
+
+.info, .alert, .warning {
+  padding: 0.5em;
+}
+
+.info {
+  background: #228;
+  background: rgba(20, 20, 255, 0.25);
+}
+
+.alert {
+  background: #882;
+  background: rgba(255, 168, 0, 0.5);
+}
+
+.warning {
+  background: #822;
+  background: rgba(255, 20, 20, 0.25);
+}
