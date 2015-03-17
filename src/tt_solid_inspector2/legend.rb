@@ -34,7 +34,7 @@ module TT::Plugins::SolidInspector2
 
     def intersect?(legend, view)
       unless legend.is_a?(Legend)
-        raise TypeError, "Must be enother #{self.class}"
+        raise TypeError, "Must be another Legend"
       end
       bounds1 = bounds(view)
       bounds2 = legend.bounds(view)
