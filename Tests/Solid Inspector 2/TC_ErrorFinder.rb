@@ -284,10 +284,32 @@ class TC_ErrorFinder < TestUp::TestCase
   end
 
 
+  def test_find_errors_model_PrusaI3_Extruder2_skp
+    model = load_test_model("PrusaI3_Extruder2.skp")
+    entities = model.entities
+
+    result = PLUGIN::ErrorFinder.find_errors(entities)
+
+    assert_equal(1041, result.size, "Unexpected number of errors found")
+
+    errors = result.grep(PLUGIN::SolidErrors::StrayEdge)
+    assert_equal(30, errors.size, "Unexpected number of StrayEdges")
+
+    errors = result.grep(PLUGIN::SolidErrors::SurfaceBorder)
+    assert_equal(17, errors.size, "Unexpected number of SurfaceBorders")
+
+    errors = result.grep(PLUGIN::SolidErrors::InternalFaceEdge)
+    assert_equal(187, errors.size, "Unexpected number of InternalFaceEdges")
+
+
+    errors = result.grep(PLUGIN::SolidErrors::ShortEdge)
+    assert_equal(807, errors.size, "Unexpected number of ShortEdges")
+  end
+
+
   def test_find_errors_model_ReversedFaces_SmallModel_skp
     model = load_test_model("ReversedFaces-SmallModel.skp")
     entities = model.entities
-    transformation = IDENTITY
 
     result = PLUGIN::ErrorFinder.find_errors(entities)
 

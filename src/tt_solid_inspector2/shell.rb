@@ -310,6 +310,10 @@ module TT::Plugins::SolidInspector2
         end
       }
 
+      # Example model where this happens: PrusaI3_Extruder2.skp
+      # Six tiny faces sharing the same set of vertices.
+      return nil if shell_face.nil?
+
       if edge_reversed_in?(edge, shell_face) == reversed
         reverse_face(shell_face)
       end
