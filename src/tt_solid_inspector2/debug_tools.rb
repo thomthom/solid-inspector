@@ -45,6 +45,7 @@ module TT::Plugins::SolidInspector2
     end
 
 
+    # noinspection RubyInstanceMethodNamingConvention
     def onMouseMove(flags, x, y, view)
       ph = view.pick_helper
       ph.do_pick(x, y)
@@ -63,6 +64,7 @@ module TT::Plugins::SolidInspector2
     end
 
 
+    # noinspection RubyInstanceMethodNamingConvention
     def onLButtonDown(flags, x, y, view)
       ph = view.pick_helper
       ph.do_pick(x, y)

@@ -10,7 +10,6 @@
 module TT::Plugins::SolidInspector2
 
   require File.join(PATH, "debug_tools.rb")
-  require File.join(PATH, "error_window.rb")
   require File.join(PATH, "inspector_tool.rb")
   require File.join(PATH, "settings.rb")
 
@@ -41,15 +40,6 @@ module TT::Plugins::SolidInspector2
       debug_menu.add_item("Debug Reversed Faces") {
         Sketchup.active_model.select_tool(DebugFaceReversedTool.new)
       }
-
-      debug_menu.add_item("Error Dialog") {
-        begin
-          2 / 0
-        rescue => error
-          @error_window = ErrorWindow.new(error)
-          @error_window.show
-        end
-      }
     end
 
     toolbar = UI.toolbar(PLUGIN_NAME)
@@ -61,12 +51,6 @@ module TT::Plugins::SolidInspector2
 
 
   ### MAIN SCRIPT ### ----------------------------------------------------------
-
-  # Constants for Sketchup::Face.mesh
-  PolygonMeshPoints   = 0
-  PolygonMeshUVQFront = 1
-  PolygonMeshUVQBack  = 2
-  PolygonMeshNormals  = 4
 
   # Constants for Tool.onCancel
   REASON_ESC = 0
@@ -108,6 +92,7 @@ module TT::Plugins::SolidInspector2
   #   TT::Plugins::SolidInspector2.reload
   #
   # @return [Integer] Number of files reloaded.
+  # noinspection RubyGlobalVariableNamingConvention
   def self.reload()
     original_verbose = $VERBOSE
     $VERBOSE = nil

@@ -5,7 +5,6 @@
 #
 #-------------------------------------------------------------------------------
 
-require "set"
 
 module TT::Plugins::SolidInspector2
   module ObjectUtils
