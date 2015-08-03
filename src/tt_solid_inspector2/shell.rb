@@ -7,6 +7,8 @@
 
 require "set"
 
+require 'tt_solid_inspector2/error_reporter/error_reporter'
+
 
 module TT::Plugins::SolidInspector2
   # Based on Shellify by Anders Lyhagen. A thousand thanks for the code
@@ -225,7 +227,14 @@ module TT::Plugins::SolidInspector2
     #
     # @return [Float]
     def edge_normal_z_component(edge)
-      edge.line[1].z.abs
+      value = edge.line[1].z.abs
+      raise 'NaN' if value.nan?
+      value
+    rescue Exception => error
+      # Temporary error catching in an attempt to figure out why find_start_face
+      # fails in step 2.
+      ERROR_REPORTER.handle(error)
+      raise
     end
 
 
