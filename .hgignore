@@ -13,6 +13,7 @@ Backup of *.layout
 *.rbz
 
 # Folders
+SketchUp-Ruby-API-Doc/
 Research/
 Media\Dropbox.lnk
 .idea\workspace.xml
