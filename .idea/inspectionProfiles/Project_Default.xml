@@ -5,6 +5,9 @@
     <inspection_tool class="RubyClassModuleNamingConvention" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="m_minLength" value="2" />
     </inspection_tool>
+    <inspection_tool class="RubyInstanceMethodNamingConvention" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="m_maxLength" value="60" />
+    </inspection_tool>
     <inspection_tool class="RubyQuotedStringsInspection" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
   </profile>
 </component>
