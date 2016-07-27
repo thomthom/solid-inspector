@@ -204,7 +204,20 @@ module TT::Plugins::SolidInspector2
       # 2) For v, pick the attached edge (e) least aligned with the z axis.
       edges = max_z_vertex.edges.delete_if { |edge| get_faces(edge).empty? }
       edge = edges.min { |a, b|
-        edge_normal_z_component(a) <=> edge_normal_z_component(b)
+        # BUG #37: comparison of Sketchup::Edge with Sketchup::Edge failed
+        # This throws an ArgumentError some times - which is strange. Almost
+        # indicate that edge_normal_z_component yields NaN or something like
+        # that. It's not been possible to reproduce this yet - so in an attempt
+        # to get more data we throw a custom exception with more info.
+        # This is a workaround until the Error Reporter can accept additional
+        # custom data in its payload.
+        begin
+          edge_normal_z_component(a) <=> edge_normal_z_component(b)
+        rescue ArgumentError
+          val_a = edge_normal_z_component(a)
+          val_b = edge_normal_z_component(b)
+          raise "A: #{a.line.inspect} (#{val_a}) - A: #{b.line.inspect} (#{val_b})"
+        end
       }
 
       # 3) For e, pick the face attached with maximum |z| normal component.
@@ -227,14 +240,7 @@ module TT::Plugins::SolidInspector2
     #
     # @return [Float]
     def edge_normal_z_component(edge)
-      value = edge.line[1].z.abs
-      raise 'NaN' if value.nan?
-      value
-    rescue Exception => error
-      # Temporary error catching in an attempt to figure out why find_start_face
-      # fails in step 2.
-      ERROR_REPORTER.handle(error)
-      raise
+      edge.line[1].z.abs
     end
 
 
