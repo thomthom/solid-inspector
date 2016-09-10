@@ -11,6 +11,9 @@ require 'tt_solid_inspector2/error_reporter/error_reporter'
 
 
 module TT::Plugins::SolidInspector2
+
+  class HeisenBug < RuntimeError; end
+
   # Based on Shellify by Anders Lyhagen. A thousand thanks for the code
   # contribution and feedback!
   class Shell
@@ -211,13 +214,13 @@ module TT::Plugins::SolidInspector2
         # to get more data we throw a custom exception with more info.
         # This is a workaround until the Error Reporter can accept additional
         # custom data in its payload.
-        begin
-          edge_normal_z_component(a) <=> edge_normal_z_component(b)
-        rescue ArgumentError
+        result = edge_normal_z_component(a) <=> edge_normal_z_component(b)
+        if result.nil?
           val_a = edge_normal_z_component(a)
           val_b = edge_normal_z_component(b)
-          raise "A: #{a.line.inspect} (#{val_a}) - A: #{b.line.inspect} (#{val_b})"
+          raise HeisenBug, "A: #{a.line.inspect} (#{val_a.inspect}) - B: #{b.line.inspect} (#{val_b.inspect})"
         end
+        result
       }
 
       # 3) For e, pick the face attached with maximum |z| normal component.
