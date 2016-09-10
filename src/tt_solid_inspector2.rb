@@ -20,7 +20,7 @@ module TT
   PLUGIN          = self
   PLUGIN_ID       = "TT_SolidInspector2".freeze
   PLUGIN_NAME     = "Solid Inspector²".freeze
-  PLUGIN_VERSION  = "2.4.4".freeze
+  PLUGIN_VERSION  = "2.4.5".freeze
 
   # Resource paths
   file = __FILE__.dup
@@ -38,7 +38,7 @@ module TT
     @extension.description = "Inspect and fix problems with geometry that "\
       "should be manifold (solids)."
     @extension.version     = PLUGIN_VERSION
-    @extension.copyright   = "Thomas Thomassen © 2010-2015"
+    @extension.copyright   = "Thomas Thomassen © 2010-2016"
     @extension.creator     = "Thomas Thomassen (thomas@thomthom.net)"
     Sketchup.register_extension(@extension, true)
   end
