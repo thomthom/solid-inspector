@@ -12,6 +12,7 @@ module TT::Plugins::SolidInspector2
 
   require File.join(PATH, "error_finder.rb")
   require File.join(PATH, "geometry.rb")
+  require File.join(PATH, "heisenbug.rb")
   require File.join(PATH, "inspector_window.rb")
   require File.join(PATH, "instance.rb")
   require File.join(PATH, "key_codes.rb")
@@ -258,6 +259,9 @@ module TT::Plugins::SolidInspector2
       update_legends
       update_ui
       nil
+    rescue HeisenBug => error
+      HeisenbugDialog.new.show
+      ERROR_REPORTER.handle(error)
     rescue Exception => exception
       ERROR_REPORTER.handle(exception)
     end
