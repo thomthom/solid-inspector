@@ -218,9 +218,9 @@ module TT::Plugins::SolidInspector2
         val_b = edge_normal_z_component(b)
         result = val_a <=> val_b
         if result.nil?
-          klass_a = a.class.name
-          klass_b = b.class.name
-          raise HeisenBug, "A: #{a.class.name} #{a.line.inspect} (#{val_a.inspect}) #{klass_a} - B: #{b.class.name} #{b.line.inspect} (#{val_b.inspect}) #{klass_b}"
+          klass_a = val_a.class.name
+          klass_b = val_b.class.name
+          raise HeisenBug, "A: #{a.line.inspect} (#{val_a.inspect}) #{klass_a} - B: #{b.line.inspect} (#{val_b.inspect}) #{klass_b}"
         end
         result
       }
