@@ -91,16 +91,6 @@ module TT::Plugins::SolidInspector2
           }
         end
 
-        # Detect if there are nested entities.
-        self.time("Instance detection") {
-          groups = entities.grep(Sketchup::Group)
-          components = entities.grep(Sketchup::ComponentInstance)
-          instances = groups + components
-          instances.each { |instance|
-            errors << SolidErrors::NestedInstance.new(instance)
-          }
-        } # time
-
         # Detect image entities.
         self.time("Image detection") {
           entities.grep(Sketchup::Image) { |image|
@@ -116,6 +106,38 @@ module TT::Plugins::SolidInspector2
             }
           } # time
         end
+
+        # Detect if there are nested entities.
+        self.time("Instance detection") {
+          groups = entities.grep(Sketchup::Group)
+          components = entities.grep(Sketchup::ComponentInstance)
+          if Settings.search_nested_instances?
+            groups.each { |instance|
+              if instance.visible? and instance.layer.visible?
+                puts "Examining " + instance.name
+                errors += ErrorFinder.find_errors(instance.entities)
+              else
+                puts "Skip invisible " + instance.name
+              end
+            }
+            components.each { |instance|
+              if instance.visible? and instance.layer.visible?
+                puts "Examining " + instance.definition.name
+                errors += ErrorFinder.find_errors(instance.definition.entities)
+              else
+                puts "Skip invisible " + instance.definition.name
+              end
+            }
+            # components.each
+          else
+            puts ""
+            puts "Finding nested instances"
+            instances = groups + components
+            instances.each { |instance|
+              errors << SolidErrors::NestedInstance.new(instance)
+            }
+          end
+        } # time
 
       }
 
