@@ -114,24 +114,22 @@ module TT::Plugins::SolidInspector2
           if Settings.search_nested_instances?
             groups.each { |instance|
               if instance.visible? and instance.layer.visible?
-                puts "Examining " + instance.name
+                if Settings.debug_mode?
+                  puts "Examining " + instance.name
+                end
                 errors += ErrorFinder.find_errors(instance.entities)
-              else
-                puts "Skip invisible " + instance.name
               end
             }
             components.each { |instance|
               if instance.visible? and instance.layer.visible?
-                puts "Examining " + instance.definition.name
+                if Settings.debug_mode?
+                  puts "Examining " + instance.definition.name
+                end
                 errors += ErrorFinder.find_errors(instance.definition.entities)
-              else
-                puts "Skip invisible " + instance.definition.name
               end
             }
             # components.each
           else
-            puts ""
-            puts "Finding nested instances"
             instances = groups + components
             instances.each { |instance|
               errors << SolidErrors::NestedInstance.new(instance)
