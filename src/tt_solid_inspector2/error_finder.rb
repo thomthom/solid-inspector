@@ -111,26 +111,15 @@ module TT::Plugins::SolidInspector2
         self.time("Instance detection") {
           groups = entities.grep(Sketchup::Group)
           components = entities.grep(Sketchup::ComponentInstance)
+          instances = groups + components
           if Settings.search_nested_instances?
-            groups.each { |instance|
+            instances.each { |instance|
               if instance.visible? and instance.layer.visible?
-                if Settings.debug_mode?
-                  puts "Examining " + instance.name
-                end
-                errors += ErrorFinder.find_errors(instance.entities)
+                puts "Examining #{instance.name}" if Settings.debug_mode?
+                errors += ErrorFinder.find_errors(Instance.definition(instance).entities)
               end
             }
-            components.each { |instance|
-              if instance.visible? and instance.layer.visible?
-                if Settings.debug_mode?
-                  puts "Examining " + instance.definition.name
-                end
-                errors += ErrorFinder.find_errors(instance.definition.entities)
-              end
-            }
-            # components.each
           else
-            instances = groups + components
             instances.each { |instance|
               errors << SolidErrors::NestedInstance.new(instance)
             }
