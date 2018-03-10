@@ -35,7 +35,14 @@ module TT::Plugins::SolidInspector2
         hole_edges = []
         edges_with_internal_faces = []
 
+        Sketchup.status_text = "Inspecting faces..."
+
         all_faces = entities.grep(Sketchup::Face)
+        all_faces.each { |face|
+          if !face.visible?
+            errors << SolidErrors::HiddenFace.new(face)
+          end
+        }
 
         Sketchup.status_text = "Inspecting edges..."
 

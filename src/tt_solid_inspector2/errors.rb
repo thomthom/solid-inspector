@@ -74,9 +74,6 @@ module TT::Plugins::SolidInspector2
     end # class
 
 
-    # TODO: HiddenFace (?)
-
-
     # Healing MeshHoles:
     # c1 = average of hole vertices
     #
@@ -114,6 +111,44 @@ module TT::Plugins::SolidInspector2
       end
 
     end # module
+
+
+    # The face is hidden itself.
+    # Faces hidden because their group or layer is invisible are not reported.
+    class HiddenFace < SolidError
+      
+      include Fixable
+      
+      def self.display_name
+        "Hidden Faces"
+      end
+
+      def self.description
+        "Hidden faces will not be exported to STL file, and may cause holes "\
+        "in a mesh."
+      end
+
+      def fix
+        face = @entities[0]
+        return false if face.deleted?
+
+        face.visible=true
+
+        @fixed = true
+        true
+      end
+
+      def draw(view, transformation = nil)
+        view.drawing_color = ERROR_COLOR_FACE
+        draw_face(view, @entities[0], transformation)
+        view.drawing_color = ERROR_COLOR_EDGE
+        @entities[0].edges.each { |edge|
+          draw_edge(view, edge, transformation)
+        }
+        nil
+      end
+
+    end # class
 
 
     # The edge a border edge, connected to one face, but not part of an inner
