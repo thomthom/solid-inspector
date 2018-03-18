@@ -89,5 +89,15 @@ module TT::Plugins::SolidInspector2
       self.write("ShortEdgeThreshold", @short_edge_threshold.to_f)
     end
 
+
+    @search_nested_instances = self.read("SearchNestedInstances", false)
+    def self.search_nested_instances?
+      @search_nested_instances
+    end
+    def self.search_nested_instances=(boolean)
+      @search_nested_instances = boolean ? true : false
+      self.write("SearchNestedInstances", @search_nested_instances)
+    end
+
   end # module Settings
 end # module TT::Plugins::SolidInspector2
