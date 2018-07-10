@@ -116,9 +116,9 @@ module TT::Plugins::SolidInspector2
     # The face is hidden itself.
     # Faces hidden because their group or layer is invisible are not reported.
     class HiddenFace < SolidError
-      
+
       include Fixable
-      
+
       def self.display_name
         "Hidden Faces"
       end
@@ -164,42 +164,6 @@ module TT::Plugins::SolidInspector2
         "Border edges are connected to only one face and therefore doesn't "\
         "form a manifold. These cannot be fixed automatically and must be "\
         "fixed by hand."
-      end
-
-      def draw(view, transformation = nil)
-        view.drawing_color = ERROR_COLOR_EDGE
-        draw_edge(view, @entities[0], transformation)
-        nil
-      end
-
-    end # class
-
-
-    # The edge is a border edge, connected to one face, and part of one of the
-    # inner loops of the face.
-    class HoleEdge < SolidError
-
-      include EraseToFix
-
-      def self.display_name
-        "Hole Edges"
-      end
-
-      def self.description
-        "Hole edges are edges forming a hole within a face. These are "\
-        "fixed automatically by removing the hole all together."
-      end
-
-      def fix
-        return false if @entities[0].deleted?
-        # Find all the edges for the inner loop the edge is part of and erase all
-        # of them.
-        entities = @entities[0].parent
-        face = @entities[0].faces.first
-        edge_loop = face.loops.find { |loop| loop.edges.include?(@entities[0]) }
-        entities.erase_entities(edge_loop.edges)
-        @fixed = true
-        true
       end
 
       def draw(view, transformation = nil)
@@ -260,7 +224,7 @@ module TT::Plugins::SolidInspector2
     end # class
 
 
-    # The face is located on the inside of what could be a manifold mesh.
+    # The face is located on the outside of what could be a manifold mesh.
     class ExternalFace < SolidError
 
       include EraseToFix
