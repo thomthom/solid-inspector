@@ -74,7 +74,7 @@ module TT::Plugins::SolidInspector2
       # From the two sets we can resolve the actual shell which form a manifold.
       @shell_faces = shell_front.intersection(shell_back)
 
-      # Given the final shell and the internal faces found we now know which
+      # Given the final shell and the internal faces found, we now know which
       # faces are external.
       @external_faces = Set.new(faces).subtract(@internal_faces)
                                       .subtract(@shell_faces)
