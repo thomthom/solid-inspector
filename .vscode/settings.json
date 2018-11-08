@@ -1,28 +1,3 @@
 {
-  "cSpell.enabledLanguageIds": [
-    "c",
-    "cpp",
-    "csharp",
-    "css",
-    "go",
-    "handlebars",
-    "html",
-    "jade",
-    "javascript",
-    "javascriptreact",
-    "json",
-    "latex",
-    "less",
-    "markdown",
-    "php",
-    "pub",
-    "python",
-    "restructuredtext",
-    "rust",
-    "scss",
-    "text",
-    "typescript",
-    "typescriptreact",
-    "yml"
-  ]
+  "solargraph.diagnostics": true
 }

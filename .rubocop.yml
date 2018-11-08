@@ -1,0 +1,42 @@
+require: rubocop-sketchup
+
+inherit_from:
+  - https://raw.githubusercontent.com/SketchUp/rubocop-sketchup/master/sketchup-style.yml
+
+AllCops:
+  Exclude:
+    - src/*/vendor/**/*
+  SketchUp:
+    SourcePath: src
+    TargetSketchUpVersion: 2014
+    Exclude:
+      - Research/**/*
+      - skippy/**/*
+      - Tests/**/*
+  TargetRubyVersion: 2.2 # Should have been 2.0 but RuboCop dropped support.
+
+
+Naming/ClassAndModuleCamelCase:
+  Exclude:
+    - Tests/**/*
+
+Naming/FileName:
+  Exclude:
+    - Tests/**/*
+
+Naming/MethodName:
+  Exclude:
+    - Tests/**/*
+
+# TODO: Add these to sketchup-style.yml
+Naming/UncommunicativeMethodParamName:
+  AllowedNames:
+    - x
+    - y
+    - z
+    - u
+    - v
+
+# TODO: Use autofix on this
+Style/StringLiterals:
+  Enabled: false

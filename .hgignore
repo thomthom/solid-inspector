@@ -17,3 +17,9 @@ SketchUp-Ruby-API-Doc/
 Research/
 Media\Dropbox.lnk
 .idea\workspace.xml
+
+# RuboCop
+.rubocop-https-*-yml
+
+# Bundle
+Gemfile.lock
