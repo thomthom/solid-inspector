@@ -7,6 +7,7 @@
 
 require "set"
 
+module Sketchup; class ModelService; end; end unless defined?(Sketchup::ModelService)
 
 module TT::Plugins::SolidInspector2
 
@@ -17,9 +18,10 @@ module TT::Plugins::SolidInspector2
   require File.join(PATH, "instance.rb")
   require File.join(PATH, "key_codes.rb")
   require File.join(PATH, "legend.rb")
+  require File.join(PATH, "execution.rb")
 
 
-  class InspectorTool
+  class InspectorTool < Sketchup::ModelService
 
     include KeyCodes
 
@@ -50,6 +52,8 @@ module TT::Plugins::SolidInspector2
 
       Sketchup.active_model.active_view.invalidate
       update_ui
+
+      Sketchup.active_model.add_observer(self)
       nil
     rescue Exception => exception
       ERROR_REPORTER.handle(exception)
@@ -62,6 +66,8 @@ module TT::Plugins::SolidInspector2
         @window.close
       end
       view.invalidate
+
+      Sketchup.active_model.remove_observer(self)
       nil
     rescue Exception => exception
       ERROR_REPORTER.handle(exception)
@@ -213,14 +219,68 @@ module TT::Plugins::SolidInspector2
       @screen_legends.each { |legend|
         legend.draw(view)
       }
+
+      # KLUDGE: Reset as it interfere with other tools while running as a service.
+      view.line_stipple = ''
+      view.line_width = 1
       nil
     rescue Exception => exception
       ERROR_REPORTER.handle(exception)
     end
 
+    def onSelectionAdded(selection, entity)
+      # puts "onSelectionAdded: #{entity}"
+      reanalyze
+    end
+    def onSelectionBulkChange(selection)
+      # puts "onSelectionRemoved: #{selection}"
+      reanalyze
+    end
+    def onSelectionCleared(selection)
+      # puts "onSelectionCleared: #{selection}"
+      reanalyze
+    end
+    # Note that there is a bug that prevent this from being called. Instead
+    # listen to onSelectedRemoved until the bug is fixed.
+    def onSelectionRemoved(selection, entity)
+      # puts "onSelectionRemoved: #{entity}"
+      reanalyze
+    end
+    # To work around this you must catch this event instead until the bug is
+    # fixed:
+    def onSelectedRemoved(selection, entity)
+      # You can forward it to the correct event to be future compatible.
+      onSelectionRemoved(selection, entity)
+    end
+
+    def onTransactionCommit(model)
+      # puts "onTransactionCommit: #{model}"
+      reanalyze
+    end
+    def onTransactionEmpty(model)
+      # puts "onTransactionEmpty: #{model}"
+      reanalyze
+    end
+    def onTransactionRedo(model)
+      # puts "onTransactionRedo: #{model}"
+      reanalyze
+    end
+    def onTransactionUndo(model)
+      # puts "onTransactionUndo: #{model}"
+      reanalyze
+    end
+
 
     private
 
+
+    def reanalyze
+      @reanalyze ||= Execution::Debounce.new(0.05)
+      @reanalyze.call do
+        analyze
+        Sketchup.active_model.active_view.invalidate
+      end
+    end
 
     def analyze
       #puts "analyse"

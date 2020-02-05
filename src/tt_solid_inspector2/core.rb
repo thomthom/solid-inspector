@@ -78,7 +78,11 @@ module TT::Plugins::SolidInspector2
 
 
   def self.inspect_solid
-    Sketchup.active_model.select_tool(InspectorTool.new)
+    # Sketchup.active_model.select_tool(InspectorTool.new)
+    model = Sketchup.active_model
+    service = InspectorTool.new
+    model.services.add(service)
+    service.activate
   rescue Exception => error
     ERROR_REPORTER.handle(error)
   end
