@@ -25,8 +25,10 @@ module TT::Plugins::SolidInspector2
 
     include KeyCodes
 
+    def initialize(service: false)
+      super('Solid Inspection')
+      @service = service
 
-    def initialize
       @errors = []
       @current_error = 0
       @filtered_errors = nil
@@ -43,12 +45,29 @@ module TT::Plugins::SolidInspector2
       nil
     end
 
+    def running_as_service?
+      @service
+    end
+
+
+    # @param [Sketchup::View] view
+    def start(view)
+      activate
+    end
+
+    # @param [Sketchup::View] view
+    def stop(view)
+      deactivate(view)
+    end
+
 
     def activate
       @deactivating = false
 
-      @window ||= create_window
-      @window.show
+      unless running_as_service?
+        @window ||= create_window
+        @window.show
+      end
 
       Sketchup.active_model.active_view.invalidate
       update_ui
@@ -651,7 +670,7 @@ module TT::Plugins::SolidInspector2
 
     def update_webdialog
       grouped_errors = group_errors(@errors)
-      @window.call("list_errors", grouped_errors)
+      @window.call("list_errors", grouped_errors) if @window
     end
 
 

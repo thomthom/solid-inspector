@@ -5,18 +5,67 @@
 #
 #-------------------------------------------------------------------------------
 
-
-
 module TT::Plugins::SolidInspector2
 
   require File.join(PATH, "debug_tools.rb")
   require File.join(PATH, "inspector_tool.rb")
   require File.join(PATH, "settings.rb")
 
-
   PATH_IMAGES  = File.join(PATH, "images").freeze
   PATH_GL_TEXT = File.join(PATH_IMAGES, "text").freeze
   PATH_HTML    = File.join(PATH, "html").freeze
+
+  ### MAIN SCRIPT ### ----------------------------------------------------------
+
+  # Constants for Tool.onCancel
+  REASON_ESC = 0
+  REASON_REACTIVATE = 1
+  REASON_UNDO = 2
+
+  # Constants for Sketchup::View.draw_points
+  DRAW_OPEN_SQUARE     = 1
+  DRAW_FILLED_SQUARE   = 2
+  DRAW_PLUS            = 3
+  DRAW_CROSS           = 4
+  DRAW_STAR            = 5
+  DRAW_OPEN_TRIANGLE   = 6
+  DRAW_FILLED_TRIANGLE = 7
+
+  # Constants for Geom::BoundingBox.corner
+  BB_LEFT_FRONT_BOTTOM  = 0
+  BB_RIGHT_FRONT_BOTTOM = 1
+  BB_LEFT_BACK_BOTTOM   = 2
+  BB_RIGHT_BACK_BOTTOM  = 3
+  BB_LEFT_FRONT_TOP     = 4
+  BB_RIGHT_FRONT_TOP    = 5
+  BB_LEFT_BACK_TOP      = 6
+  BB_RIGHT_BACK_TOP     = 7
+
+
+  # TT::Plugins::SolidInspector2.inspect_solid
+  def self.inspect_solid
+    Sketchup.active_model.select_tool(InspectorTool.new)
+  rescue Exception => error
+    ERROR_REPORTER.handle(error)
+  end
+
+  # TT::Plugins::SolidInspector2.service
+  def self.service
+    @service
+  end
+
+  # TT::Plugins::SolidInspector2.start_services
+  def self.start_services
+    model = Sketchup.active_model
+    if @service
+      model.services.remove(@service)
+      @service = nil
+    end
+    @service = InspectorTool.new(service: true)
+    model.services.add(@service)
+  rescue Exception => error
+    ERROR_REPORTER.handle(error)
+  end
 
 
   ### MENU & TOOLBARS ### ------------------------------------------------------
@@ -46,45 +95,11 @@ module TT::Plugins::SolidInspector2
     toolbar.add_item(cmd_inspector)
     toolbar.restore
 
+    if defined?(Sketchup::ModelService)
+      self.start_services
+    end
+
     file_loaded(__FILE__)
-  end
-
-
-  ### MAIN SCRIPT ### ----------------------------------------------------------
-
-  # Constants for Tool.onCancel
-  REASON_ESC = 0
-  REASON_REACTIVATE = 1
-  REASON_UNDO = 2
-
-  # Constants for Sketchup::View.draw_points
-  DRAW_OPEN_SQUARE     = 1
-  DRAW_FILLED_SQUARE   = 2
-  DRAW_PLUS            = 3
-  DRAW_CROSS           = 4
-  DRAW_STAR            = 5
-  DRAW_OPEN_TRIANGLE   = 6
-  DRAW_FILLED_TRIANGLE = 7
-
-  # Constants for Geom::BoundingBox.corner
-  BB_LEFT_FRONT_BOTTOM  = 0
-  BB_RIGHT_FRONT_BOTTOM = 1
-  BB_LEFT_BACK_BOTTOM   = 2
-  BB_RIGHT_BACK_BOTTOM  = 3
-  BB_LEFT_FRONT_TOP     = 4
-  BB_RIGHT_FRONT_TOP    = 5
-  BB_LEFT_BACK_TOP      = 6
-  BB_RIGHT_BACK_TOP     = 7
-
-
-  def self.inspect_solid
-    # Sketchup.active_model.select_tool(InspectorTool.new)
-    model = Sketchup.active_model
-    service = InspectorTool.new
-    model.services.add(service)
-    service.activate
-  rescue Exception => error
-    ERROR_REPORTER.handle(error)
   end
 
 
