@@ -69,10 +69,13 @@ module TT::Plugins::SolidInspector2
         @window.show
       end
 
-      Sketchup.active_model.active_view.invalidate
+      model = Sketchup.active_model
+
+      model.active_view.invalidate
       update_ui
 
-      Sketchup.active_model.add_observer(self)
+      start_observing_app
+      start_observing_model(model)
       nil
     rescue Exception => exception
       ERROR_REPORTER.handle(exception)
@@ -86,7 +89,8 @@ module TT::Plugins::SolidInspector2
       end
       view.invalidate
 
-      Sketchup.active_model.remove_observer(self)
+      stop_observing_model(Sketchup.active_model)
+      stop_observing_app
       nil
     rescue Exception => exception
       ERROR_REPORTER.handle(exception)
@@ -289,8 +293,39 @@ module TT::Plugins::SolidInspector2
       reanalyze
     end
 
+    # @param [Sketchup::Model]
+    def onNewModel(model)
+      start_observing_model(model)
+    end
+
+    # @param [Sketchup::Model]
+    def onOpenModel(model)
+      start_observing_model(model)
+    end
 
     private
+
+    def start_observing_app
+      # TODO: Need to figure out how model services works with Mac's MDI.
+      return unless Sketchup.platform == :platform_win
+      Sketchup.remove_observer(self)
+      Sketchup.add_observer(self)
+    end
+
+    def stop_observing_app
+      return unless Sketchup.platform == :platform_win
+      Sketchup.remove_observer(self)
+    end
+
+    # @param [Sketchup::Model]
+    def start_observing_model(model)
+      model.add_observer(self)
+    end
+
+    # @param [Sketchup::Model]
+    def stop_observing_model(model)
+      model.remove_observer(self)
+    end
 
 
     def reanalyze
