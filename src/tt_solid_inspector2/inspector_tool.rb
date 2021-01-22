@@ -7,8 +7,6 @@
 
 require "set"
 
-module Sketchup; class ModelService; end; end unless defined?(Sketchup::ModelService)
-
 module TT::Plugins::SolidInspector2
 
   require File.join(PATH, "error_finder.rb")
@@ -20,8 +18,16 @@ module TT::Plugins::SolidInspector2
   require File.join(PATH, "legend.rb")
   require File.join(PATH, "execution.rb")
 
+  unless defined?(MODEL_SERVICE)
+    MODEL_SERVICE = if defined?(Sketchup::ModelService)
+      Sketchup::ModelService
+    else
+      require 'tt_solid_inspector2/mock_service'
+      MockService
+    end
+  end
 
-  class InspectorTool < Sketchup::ModelService
+  class InspectorTool < MODEL_SERVICE
 
     include KeyCodes
 
