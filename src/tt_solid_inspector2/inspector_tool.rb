@@ -114,6 +114,8 @@ module TT::Plugins::SolidInspector2
 
 
     def onMouseMove(flags, x, y, view)
+      return false if running_as_service?
+
       if @screen_legends
         point = Geom::Point3d.new(x, y, 0)
         legend = @screen_legends.find { |legend| legend.mouse_over?(point, view) }
@@ -126,6 +128,8 @@ module TT::Plugins::SolidInspector2
 
 
     def onLButtonUp(flags, x, y, view)
+      return false if running_as_service?
+
       # Allow errors to be selected by clicking the legends.
       if @screen_legends
         point = Geom::Point3d.new(x, y, 0)
