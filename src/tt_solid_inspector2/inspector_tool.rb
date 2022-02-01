@@ -31,8 +31,13 @@ module TT::Plugins::SolidInspector2
 
     include KeyCodes
 
+    attr_reader :service_id, :name
+
     def initialize(service: false)
-      super('Solid Inspection')
+      super()
+      @service_id = 'thomthom.solidinspector'.freeze
+      @name = 'Solid Inspection'.freeze
+
       @service = service
 
       @errors = []
@@ -93,7 +98,7 @@ module TT::Plugins::SolidInspector2
         @deactivating = true
         @window.close
       end
-      view.invalidate
+      view&.invalidate # TODO: workaround, might be nil
 
       stop_observing_model(Sketchup.active_model)
       stop_observing_app
