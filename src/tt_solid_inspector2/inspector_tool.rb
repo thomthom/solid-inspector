@@ -18,27 +18,27 @@ module TT::Plugins::SolidInspector2
   require File.join(PATH, "legend.rb")
   require File.join(PATH, "execution.rb")
 
-  unless defined?(MODEL_SERVICE)
-    MODEL_SERVICE = if defined?(Sketchup::ModelService)
-      Sketchup::ModelService
+  unless defined?(OVERLAY)
+    OVERLAY = if defined?(Sketchup::Overlay)
+      Sketchup::Overlay
     else
-      require 'tt_solid_inspector2/mock_service'
-      MockService
+      require 'tt_solid_inspector2/mock_overlay'
+      MockOverlay
     end
   end
 
-  class InspectorTool < MODEL_SERVICE
+  class InspectorTool < OVERLAY
 
     include KeyCodes
 
-    attr_reader :service_id, :name
+    attr_reader :overlay_id, :name
 
-    def initialize(service: false)
+    def initialize(overlay: false)
       super()
-      @service_id = 'thomthom.solidinspector'.freeze
+      @overlay_id = 'thomthom.solidinspector'.freeze
       @name = 'Solid Inspection'.freeze
 
-      @service = service
+      @overlay = overlay
 
       @errors = []
       @current_error = 0
@@ -56,8 +56,8 @@ module TT::Plugins::SolidInspector2
       nil
     end
 
-    def running_as_service?
-      @service
+    def running_as_overlay?
+      @overlay
     end
 
 
@@ -75,7 +75,7 @@ module TT::Plugins::SolidInspector2
     def activate
       @deactivating = false
 
-      unless running_as_service?
+      unless running_as_overlay?
         @window ||= create_window
         @window.show
       end
@@ -119,7 +119,7 @@ module TT::Plugins::SolidInspector2
 
 
     def onMouseMove(flags, x, y, view)
-      return false if running_as_service?
+      return false if running_as_overlay?
 
       if @screen_legends
         point = Geom::Point3d.new(x, y, 0)
@@ -133,7 +133,7 @@ module TT::Plugins::SolidInspector2
 
 
     def onLButtonUp(flags, x, y, view)
-      return false if running_as_service?
+      return false if running_as_overlay?
 
       # Allow errors to be selected by clicking the legends.
       if @screen_legends
@@ -258,7 +258,7 @@ module TT::Plugins::SolidInspector2
         legend.draw(view)
       }
 
-      # KLUDGE: Reset as it interfere with other tools while running as a service.
+      # KLUDGE: Reset as it interfere with other tools while running as a overlay.
       view.line_stipple = ''
       view.line_width = 1
       nil
@@ -321,7 +321,7 @@ module TT::Plugins::SolidInspector2
     private
 
     def start_observing_app
-      # TODO: Need to figure out how model services works with Mac's MDI.
+      # TODO: Need to figure out how model overlays works with Mac's MDI.
       return unless Sketchup.platform == :platform_win
       Sketchup.remove_observer(self)
       Sketchup.add_observer(self)

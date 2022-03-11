@@ -49,20 +49,20 @@ module TT::Plugins::SolidInspector2
     ERROR_REPORTER.handle(error)
   end
 
-  # TT::Plugins::SolidInspector2.service
-  def self.service
-    @service
+  # TT::Plugins::SolidInspector2.overlay
+  def self.overlay
+    @overlay
   end
 
-  # TT::Plugins::SolidInspector2.start_services
-  def self.start_services
+  # TT::Plugins::SolidInspector2.start_overlays
+  def self.start_overlays
     model = Sketchup.active_model
-    if @service
-      model.services.remove(@service)
-      @service = nil
+    if @overlay
+      model.overlays.remove(@overlay)
+      @overlay = nil
     end
-    @service = InspectorTool.new(service: true)
-    model.services.add(@service)
+    @overlay = InspectorTool.new(overlay: true)
+    model.overlays.add(@overlay)
   rescue Exception => error
     ERROR_REPORTER.handle(error)
   end
@@ -95,8 +95,8 @@ module TT::Plugins::SolidInspector2
     toolbar.add_item(cmd_inspector)
     toolbar.restore
 
-    if defined?(Sketchup::ModelService)
-      self.start_services
+    if defined?(Sketchup::Overlay)
+      self.start_overlays
     end
 
     file_loaded(__FILE__)
