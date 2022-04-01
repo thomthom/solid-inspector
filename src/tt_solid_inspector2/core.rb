@@ -49,20 +49,27 @@ module TT::Plugins::SolidInspector2
     ERROR_REPORTER.handle(error)
   end
 
-  # TT::Plugins::SolidInspector2.overlay
-  def self.overlay
-    @overlay
+  class AppObserver < Sketchup::AppObserver
+
+    def expectsStartupModelNotifications
+      true
+    end
+
+    def register_overlay(model)
+      @@overlays ||= {}
+      overlay = InspectorTool.new(overlay: true)
+      model.overlays.add(overlay)
+      @@overlays[model] = overlay
+    end
+    alias_method :onNewModel, :register_overlay
+    alias_method :onOpenModel, :register_overlay
+
   end
 
   # TT::Plugins::SolidInspector2.start_overlays
   def self.start_overlays
-    model = Sketchup.active_model
-    if @overlay
-      model.overlays.remove(@overlay)
-      @overlay = nil
-    end
-    @overlay = InspectorTool.new(overlay: true)
-    model.overlays.add(@overlay)
+    observer = AppObserver.new
+    Sketchup.add_observer(observer)
   rescue Exception => error
     ERROR_REPORTER.handle(error)
   end
