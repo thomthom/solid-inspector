@@ -56,10 +56,8 @@ module TT::Plugins::SolidInspector2
     end
 
     def register_overlay(model)
-      @@overlays ||= {}
       overlay = InspectorTool.new(overlay: true)
       model.overlays.add(overlay)
-      @@overlays[model] = overlay
     end
     alias_method :onNewModel, :register_overlay
     alias_method :onOpenModel, :register_overlay
