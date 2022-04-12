@@ -339,6 +339,8 @@ module TT::Plugins::SolidInspector2
 
     # @param [Sketchup::Model]
     def stop_observing_model(model)
+      return if model.nil? # Mac when model is closed.
+
       model.remove_observer(self)
     end
 
