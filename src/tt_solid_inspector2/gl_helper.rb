@@ -41,20 +41,32 @@ module TT::Plugins::SolidInspector2
     end
 
 
-    def draw_face(view, face, transformation = nil)
+    def draw_face(view, face, transformation = nil, texture_id: nil)
       return false if face.deleted?
-      mesh = face.mesh(POLYGON_MESH_POINTS)
-      points = offset_toward_camera(view, mesh.points)
-      transform_points(points, transformation)
+
+      flags = POLYGON_MESH_POINTS
+      flags |= POLYGON_MESH_UVQ_BACK if texture_id
+
+      mesh = face.mesh(flags)
+      mesh_points = offset_toward_camera(view, mesh.points)
+      mesh_uvs = mesh.uvs(false)
+      transform_points(mesh_points, transformation)
       triangles = []
+      uvs = []
       mesh.polygons.each { |polygon|
         polygon.each { |index|
           # Indicies start at 1 and can be negative to indicate edge smoothing.
           # Must take this into account when looking up the points in our array.
-          triangles << points[index.abs - 1]
+          i = index.abs - 1
+          triangles << mesh_points[i]
+          uvs << mesh_uvs[i] if texture_id
         }
       }
-      view.draw(GL_TRIANGLES, triangles)
+      if texture_id
+        view.draw(GL_TRIANGLES, triangles, texture: texture_id, uvs: uvs)
+      else
+        view.draw(GL_TRIANGLES, triangles)
+      end
       true
     end
 

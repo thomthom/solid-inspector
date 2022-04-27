@@ -59,7 +59,7 @@ module TT::Plugins::SolidInspector2
         is_a?(Fixable)
       end
 
-      def draw(view, transformation = nil)
+      def draw(view, transformation = nil, texture_id: nil)
         raise NotImplementedError
       end
 
@@ -138,9 +138,9 @@ module TT::Plugins::SolidInspector2
         true
       end
 
-      def draw(view, transformation = nil)
+      def draw(view, transformation = nil, texture_id: nil)
         view.drawing_color = ERROR_COLOR_FACE
-        draw_face(view, @entities[0], transformation)
+        draw_face(view, @entities[0], transformation, texture_id: texture_id)
         view.drawing_color = ERROR_COLOR_EDGE
         @entities[0].edges.each { |edge|
           draw_edge(view, edge, transformation)
@@ -166,7 +166,7 @@ module TT::Plugins::SolidInspector2
         "fixed by hand."
       end
 
-      def draw(view, transformation = nil)
+      def draw(view, transformation = nil, texture_id: nil)
         view.drawing_color = ERROR_COLOR_EDGE
         draw_edge(view, @entities[0], transformation)
         nil
@@ -190,7 +190,7 @@ module TT::Plugins::SolidInspector2
         "then run the tool again."
       end
 
-      def draw(view, transformation = nil)
+      def draw(view, transformation = nil, texture_id: nil)
         view.drawing_color = ERROR_COLOR_EDGE
         draw_edge(view, @entities[0], transformation)
         nil
@@ -214,9 +214,9 @@ module TT::Plugins::SolidInspector2
         "faces."
       end
 
-      def draw(view, transformation = nil)
+      def draw(view, transformation = nil, texture_id: nil)
         view.drawing_color = ERROR_COLOR_FACE
-        draw_face(view, @entities[0], transformation)
+        draw_face(view, @entities[0], transformation, texture_id: texture_id)
         # TODO: Draw edges? Maybe in 2d to ensure the face is seen?
         nil
       end
@@ -239,9 +239,9 @@ module TT::Plugins::SolidInspector2
         "faces."
       end
 
-      def draw(view, transformation = nil)
+      def draw(view, transformation = nil, texture_id: nil)
         view.drawing_color = ERROR_COLOR_FACE
-        draw_face(view, @entities[0], transformation)
+        draw_face(view, @entities[0], transformation, texture_id: texture_id)
         nil
       end
 
@@ -295,9 +295,9 @@ module TT::Plugins::SolidInspector2
         true
       end
 
-      def draw(view, transformation = nil)
+      def draw(view, transformation = nil, texture_id: nil)
         view.drawing_color = ERROR_COLOR_FACE
-        draw_face(view, @entities[0], transformation)
+        draw_face(view, @entities[0], transformation, texture_id: texture_id)
         view.drawing_color = ERROR_COLOR_EDGE
         @entities[0].edges.each { |edge|
           draw_edge(view, edge, transformation)
@@ -385,7 +385,7 @@ module TT::Plugins::SolidInspector2
         "of solids. These are automatically fixed by erasing the stray edges."
       end
 
-      def draw(view, transformation = nil)
+      def draw(view, transformation = nil, texture_id: nil)
         view.drawing_color = ERROR_COLOR_EDGE
         draw_edge(view, @entities[0], transformation)
         nil
@@ -407,7 +407,7 @@ module TT::Plugins::SolidInspector2
         "run the tool again."
       end
 
-      def draw(view, transformation = nil)
+      def draw(view, transformation = nil, texture_id: nil)
         view.drawing_color = ERROR_COLOR_EDGE
         @entities.each { |edge|
           draw_edge(view, edge, transformation)
@@ -432,7 +432,7 @@ module TT::Plugins::SolidInspector2
         "by erasing the hole."
       end
 
-      def draw(view, transformation = nil)
+      def draw(view, transformation = nil, texture_id: nil)
         view.drawing_color = ERROR_COLOR_EDGE
         @entities.each { |edge|
           draw_edge(view, edge, transformation)
@@ -470,7 +470,7 @@ module TT::Plugins::SolidInspector2
         true
       end
 
-      def draw(view, transformation = nil)
+      def draw(view, transformation = nil, texture_id: nil)
         view.drawing_color = ERROR_COLOR_EDGE
         draw_instance(view, @entities[0], transformation)
         nil
@@ -491,7 +491,7 @@ module TT::Plugins::SolidInspector2
         "operations on the object."
       end
 
-      def draw(view, transformation = nil)
+      def draw(view, transformation = nil, texture_id: nil)
         view.drawing_color = ERROR_COLOR_EDGE
         draw_instance(view, @entities[0], transformation)
         nil
@@ -513,7 +513,7 @@ module TT::Plugins::SolidInspector2
         "by factors of 10 to work around such problems."
       end
 
-      def draw(view, transformation = nil)
+      def draw(view, transformation = nil, texture_id: nil)
         view.drawing_color = ERROR_COLOR_EDGE
         draw_edge(view, @entities[0], transformation)
         nil

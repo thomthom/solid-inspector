@@ -82,6 +82,13 @@ module TT::Plugins::SolidInspector2
 
       model = Sketchup.active_model
 
+      if running_as_overlay?
+        filename = 'Warning-Stripes.png'
+        path = File.join(PATH_IMAGES, filename)
+        image_rep = Sketchup::ImageRep.new(path)
+        @texture_id = model.active_view.load_texture(image_rep)
+      end
+
       model.active_view.invalidate
       update_ui
 
@@ -94,6 +101,9 @@ module TT::Plugins::SolidInspector2
 
 
     def deactivate(view)
+      model = Sketchup.active_model
+      model.active_view.release_texture(@texture_id) if @texture_id
+
       if @window && @window.visible?
         @deactivating = true
         @window.close
@@ -240,8 +250,14 @@ module TT::Plugins::SolidInspector2
 
 
     def draw(view)
+      points = [ [0, 0, 0], [10, 0, 0], [10, 10, 0], [0, 10, 0] ]
+      uvs = [ [0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0] ]
+      tr = Geom::Transformation.scaling(20.0)
+      points.each { |pt| pt.transform!(tr) }
+      view.draw2d(GL_QUADS, points, texture: @texture_id, uvs: uvs)
+
       filtered_errors.each { |error|
-        error.draw(view, @transformation)
+        error.draw(view, @transformation, texture_id: @texture_id)
       }
 
       draw_circle_around_current_error(view)
