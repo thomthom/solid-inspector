@@ -31,12 +31,8 @@ module TT::Plugins::SolidInspector2
 
     include KeyCodes
 
-    attr_reader :overlay_id, :name
-
     def initialize(overlay: false)
-      super()
-      @overlay_id = 'thomthom.solidinspector'.freeze
-      @name = 'Solid Inspection'.freeze
+      super('thomthom.solidinspector', 'Solid Inspection')
 
       @overlay = overlay
 
@@ -61,14 +57,12 @@ module TT::Plugins::SolidInspector2
     end
 
 
-    # @param [Sketchup::View] view
-    def start(view)
+    def start
       activate
     end
 
-    # @param [Sketchup::View] view
-    def stop(view)
-      deactivate(view)
+    def stop
+      deactivate(Sketchup.active_model.active_view)
     end
 
 
