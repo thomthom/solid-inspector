@@ -244,11 +244,11 @@ module TT::Plugins::SolidInspector2
 
 
     def draw(view)
-      points = [ [0, 0, 0], [10, 0, 0], [10, 10, 0], [0, 10, 0] ]
-      uvs = [ [0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0] ]
-      tr = Geom::Transformation.scaling(20.0)
-      points.each { |pt| pt.transform!(tr) }
-      view.draw2d(GL_QUADS, points, texture: @texture_id, uvs: uvs)
+      # points = [ [0, 0, 0], [10, 0, 0], [10, 10, 0], [0, 10, 0] ]
+      # uvs = [ [0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0] ]
+      # tr = Geom::Transformation.scaling(20.0)
+      # points.each { |pt| pt.transform!(tr) }
+      # view.draw2d(GL_QUADS, points, texture: @texture_id, uvs: uvs)
 
       filtered_errors.each { |error|
         error.draw(view, @transformation, texture_id: @texture_id)
