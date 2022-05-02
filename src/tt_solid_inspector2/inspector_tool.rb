@@ -88,6 +88,8 @@ module TT::Plugins::SolidInspector2
 
       start_observing_app
       start_observing_model(model)
+
+      analyze if running_as_overlay?
       nil
     rescue Exception => exception
       ERROR_REPORTER.handle(exception)
