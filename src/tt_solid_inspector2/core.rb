@@ -57,6 +57,7 @@ module TT::Plugins::SolidInspector2
 
     def register_overlay(model)
       overlay = InspectorTool.new(overlay: true)
+      overlay.description = "Inspects selected instances for manifold issues."
       model.overlays.add(overlay)
     end
     alias_method :onNewModel, :register_overlay
