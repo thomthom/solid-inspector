@@ -86,14 +86,21 @@ module TT::Plugins::SolidInspector2
 
   ### MENU & TOOLBARS ### ------------------------------------------------------
 
+  ICON_EXT = Sketchup.platform == :platform_osx ? 'pdf' : 'svg'
+
   unless file_loaded?(__FILE__)
     cmd = UI::Command.new(PLUGIN_NAME) {
       self.inspect_solid
     }
     cmd.tooltip = "Inspect and repair solid groups and component."
     cmd.status_bar_text = "Inspect and repair solid groups and components."
-    cmd.small_icon = File.join(PATH_IMAGES, 'Inspector-16.png')
-    cmd.large_icon = File.join(PATH_IMAGES, 'Inspector-24.png')
+    if Sketchup.version.to_i >= 16
+      cmd.small_icon = File.join(PATH_IMAGES, "Inspector.#{ICON_EXT}")
+      cmd.large_icon = File.join(PATH_IMAGES, "Inspector.#{ICON_EXT}")
+    else
+      cmd.small_icon = File.join(PATH_IMAGES, "Inspector-16.png")
+      cmd.large_icon = File.join(PATH_IMAGES, "Inspector-24.png")
+    end
     cmd_inspector = cmd
 
     menu = UI.menu("Tools")
@@ -135,7 +142,7 @@ module TT::Plugins::SolidInspector2
     load __FILE__
     # Supporting files
     if defined?(PATH) && File.exist?(PATH)
-      x = Dir.glob(File.join(PATH, "**/*.{rb,rbs}")).each { |file|
+      x = Dir.glob(File.join(PATH, "**/*.rb")).each { |file|
         load file
       }
       x.length + 1
