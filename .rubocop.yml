@@ -1,9 +1,13 @@
 require: rubocop-sketchup
 
 inherit_from:
-  - https://raw.githubusercontent.com/SketchUp/rubocop-sketchup/master/sketchup-style.yml
+  - https://raw.githubusercontent.com/SketchUp/rubocop-sketchup/be63d4cf143b0d7cd4d517804efc9a5850802b24/sketchup-style.yml
 
 AllCops:
+  DisabledByDefault: true
+  DisplayCopNames: true
+  DisplayStyleGuide: true
+  ExtraDetails: true
   Exclude:
     - src/*/vendor/**/*
   SketchUp:
@@ -13,7 +17,7 @@ AllCops:
       - Research/**/*
       - skippy/**/*
       - Tests/**/*
-  TargetRubyVersion: 2.2 # Should have been 2.0 but RuboCop dropped support.
+  TargetRubyVersion: 2.0
 
 
 Naming/ClassAndModuleCamelCase:
@@ -29,13 +33,13 @@ Naming/MethodName:
     - Tests/**/*
 
 # TODO: Add these to sketchup-style.yml
-Naming/UncommunicativeMethodParamName:
-  AllowedNames:
-    - x
-    - y
-    - z
-    - u
-    - v
+# Naming/UncommunicativeMethodParamName:
+#   AllowedNames:
+#     - x
+#     - y
+#     - z
+#     - u
+#     - v
 
 # TODO: Use autofix on this
 Style/StringLiterals:

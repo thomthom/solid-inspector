@@ -1,9 +1,14 @@
 require_paths:
+- "C:/Program Files/SketchUp/SketchUp 2023/Tools"
+- "C:/Program Files/SketchUp/SketchUp 2022/Tools"
+- "C:/Program Files/SketchUp/SketchUp 2021/Tools"
+- "C:/Program Files/SketchUp/SketchUp 2020/Tools"
+- "C:/Program Files/SketchUp/SketchUp 2019/Tools"
 - "C:/Program Files/SketchUp/SketchUp 2018/Tools"
 - src
 
 require:
-- sketchup-api-stubs/autoload/sketchup.rb
+- sketchup-api-stubs
 
 reporters:
 - rubocop
