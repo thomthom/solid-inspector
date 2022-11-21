@@ -58,7 +58,12 @@ module TT::Plugins::SolidInspector2
     def register_overlay(model)
       overlay = InspectorTool.new(overlay: true)
       overlay.description = "Inspects selected instances for manifold issues."
-      model.overlays.add(overlay)
+      begin
+        model.overlays.add(overlay)
+      rescue ArgumentError => error
+        # If the overlay was already registerred.
+        warn error
+      end
     end
     alias_method :onNewModel, :register_overlay
     alias_method :onOpenModel, :register_overlay
@@ -69,6 +74,11 @@ module TT::Plugins::SolidInspector2
   def self.start_overlays
     observer = AppObserver.new
     Sketchup.add_observer(observer)
+
+    # In the case of installing or enabling the extension we need to
+    # register the overlay.
+    model = Sketchup.active_model
+    observer.register_overlay(model) if model
   rescue Exception => error
     ERROR_REPORTER.handle(error)
   end

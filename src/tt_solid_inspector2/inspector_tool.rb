@@ -29,10 +29,13 @@ module TT::Plugins::SolidInspector2
 
   class InspectorTool < OVERLAY
 
+    OVERLAY_ID = 'thomthom.solidinspector'.freeze
+
     include KeyCodes
 
     def initialize(overlay: false)
-      super('thomthom.solidinspector', 'Solid Inspection')
+      puts "#{self}#initialize(overlay: #{overlay})"
+      super(OVERLAY_ID, 'Solid Inspection')
 
       @overlay = overlay
 
@@ -76,12 +79,12 @@ module TT::Plugins::SolidInspector2
 
       model = Sketchup.active_model
 
-      if running_as_overlay?
-        filename = 'Warning-Stripes.png'
-        path = File.join(PATH_IMAGES, filename)
-        image_rep = Sketchup::ImageRep.new(path)
-        @texture_id = model.active_view.load_texture(image_rep)
-      end
+      # if running_as_overlay?
+      #   filename = 'Warning-Stripes.png'
+      #   path = File.join(PATH_IMAGES, filename)
+      #   image_rep = Sketchup::ImageRep.new(path)
+      #   @texture_id = model.active_view.load_texture(image_rep)
+      # end
 
       model.active_view.invalidate
       update_ui
@@ -97,8 +100,8 @@ module TT::Plugins::SolidInspector2
 
 
     def deactivate(view)
-      model = Sketchup.active_model
-      model.active_view.release_texture(@texture_id) if @texture_id
+      # model = Sketchup.active_model
+      # model.active_view.release_texture(@texture_id) if @texture_id
 
       if @window && @window.visible?
         @deactivating = true
