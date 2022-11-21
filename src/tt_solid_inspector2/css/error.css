@@ -1,0 +1,23 @@
+/* Copyright 2014 Thomas Thomassen */
+
+#content
+{
+  padding: 10px;
+}
+
+#message
+{
+  background: #eee;
+  border: 1px solid #999;
+  padding: 5px;
+}
+
+#report
+{
+  background: #333;
+  color: #fff;
+  border: 1px solid #999;
+  padding: 5px;
+  overflow: scroll;
+  max-height: 10em;
+}

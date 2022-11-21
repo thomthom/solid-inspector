@@ -1,0 +1,194 @@
+/* Copyright 2014 Thomas Thomassen */
+
+*
+{
+  cursor: inherit;
+}
+
+input, select, textarea, a[href], .selectable
+{
+  cursor: auto !important;
+}
+
+.selectable
+{
+  cursor: text !important;
+}
+
+html {
+  background: #fff;
+  color: #444;
+
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 13px;
+
+  cursor: default;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  padding: 0;
+  margin: 0;
+}
+
+
+h1 {
+  color: #c00;
+  font-size: 20px;
+  font-weight: normal;
+  margin: 10px 0 0 0;
+}
+
+
+a, a:hover, a:visited, a:active {
+  color: #c00;
+  text-decoration: underline;
+  cursor: pointer !important;
+}
+
+
+label span {
+  font-weight: bold;
+}
+
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  color: #555555;
+
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 13px;
+
+  border: 1px solid #cfcfcf;
+  -webkit-border-radius: 1px;
+  border-radius: 1px;
+
+  padding: 8px 8px 7px 8px;
+}
+
+
+button {
+  height: 32px;
+  min-width: 90px;
+
+  color: #555555;
+  background: #f7f7f7;
+
+  border: 1px solid #bbb;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
+}
+
+button:hover {
+  -webkit-box-shadow: inset 0px 0px 10px 0px rgba(0,0,0,0.2);
+  box-shadow: inset 0px 0px 10px 0px rgba(0,0,0,0.2);
+}
+
+button.default {
+  color: #fff;
+  background: #c33 !important;
+  border-color: #a00;
+  /*border: none;*/
+}
+
+button.default:hover {
+  -webkit-box-shadow: inset 0px 0px 10px 0px rgba(0,0,0,0.5);
+  box-shadow: inset 0px 0px 10px 0px rgba(0,0,0,0.5);
+}
+
+button.default:disabled {
+  background: #fee !important;
+  border-color: #caa;
+  color: #caa;
+}
+
+button img {
+  border: none;
+}
+
+button * {
+  vertical-align: middle;
+}
+
+button:disabled {
+  color: #bbb;
+  background: #eee;
+}
+
+button:disabled:hover {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+
+.error {
+  display: none;
+  border: 1px solid #f33;
+  background: #fdd !important;
+  border-radius: 4px;
+  padding: 1em;
+}
+
+
+#ie-warning {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 1em;
+  color: #333;
+  background: #ffffd5;
+  z-index: 1000;
+}
+
+
+#header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 32px; /* 10px + 32px + 10px == 52px */
+  padding: 10px 10px;
+  padding-left: 52px; /* 10px + 32px + 10px */
+  border-bottom: 5px solid #a00;
+  background: #c33;
+  color: #fff;
+  z-index: 100;
+  font-size: 1.5em;
+  line-height: 32px;
+}
+
+
+#header img {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+}
+
+
+#content {
+  position: fixed;
+  /*top: 42px;*/
+  top: 57px;
+  bottom: 53px;
+  left: 0;
+  right: 0;
+  /*padding: 20px;*/
+  overflow: auto;
+}
+
+
+#footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-top: 1px solid #cccccc;
+  background: #eee;
+  min-height: 30px; /* 10px + 30px + 10px = 70px */
+  padding: 10px;
+  text-align: right;
+  z-index: 50;
+}

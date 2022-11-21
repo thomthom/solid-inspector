@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <link rel="stylesheet" type="text/css" href="../css/core.css" />
+  <link rel="stylesheet" type="text/css" href="../css/error.css" />
+
+  <script type="text/javascript" src="../js/third-party/jquery.js"></script>
+  <script type="text/javascript" src="../js/core.js"></script>
+  <script type="text/javascript" src="../js/error.js"></script>
+</head>
+<body>
+
+<!--[if lt IE 9]>
+  <div id="ie-warning" class="localize">
+  This extension requires IE9 or newer. Older versions are unsupported.
+  </div>
+<![endif]-->
+
+<div id="header">
+<img src="../images/Icon-32.png">
+  Oops! An error occurred
+</div>
+
+<div id="content">
+
+  <div id="message"
+    <p>
+      An uncaught error occurred. Please help improve this extensions by
+      reporting this error.
+    </p>
+    <p>
+      Copy the generated error report below and paste it into a reply in the
+      forum thread that opens when you click Report.
+    </p>
+    <p>
+      It would also be of great help if you attached the model to the forum
+      thread along with the report.
+    </p>
+  </div>
+
+  <pre id="report" class="selectable">
+  </pre>
+
+</div>
+
+<div id="footer">
+
+  <button id="close">
+    <span class="localize">Close</span>
+  </button>
+
+  <button id="send-report" type="submit" class="default"
+    title="Copy report to clipboard and open forum thread">
+    <span class="localize">Report</span>
+  </button>
+
+</div>
+
+</body>
+</html>
