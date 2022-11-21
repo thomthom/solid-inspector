@@ -34,7 +34,6 @@ module TT::Plugins::SolidInspector2
     include KeyCodes
 
     def initialize(overlay: false)
-      puts "#{self}#initialize(overlay: #{overlay})"
       super(OVERLAY_ID, 'Solid Inspection')
 
       @overlay = overlay
