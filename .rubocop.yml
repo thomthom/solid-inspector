@@ -20,8 +20,28 @@ AllCops:
   TargetRubyVersion: 2.0
 
 
+Layout/EmptyLineBetweenDefs:
+  Exclude:
+  - src/tt_solid_inspector2/settings.rb
+
+# TODO:
+Layout/FirstArgumentIndentation:
+  Enabled: false
+
+# TODO:
+Layout/HashAlignment:
+  Enabled: false
+
+
+Metrics/MethodLength:
+  Max: 30
+  Enabled: false # TODO
+
+
 Naming/ClassAndModuleCamelCase:
   Exclude:
+    - src/tt_solid_inspector2/gl/**/*
+    - src/tt_solid_inspector2/gl_*
     - Tests/**/*
 
 Naming/FileName:
@@ -30,17 +50,34 @@ Naming/FileName:
 
 Naming/MethodName:
   Exclude:
+    - src/tt_solid_inspector2/core.rb
+    - src/tt_solid_inspector2/debug_tools.rb
     - Tests/**/*
 
 # TODO: Add these to sketchup-style.yml
-# Naming/UncommunicativeMethodParamName:
-#   AllowedNames:
-#     - x
-#     - y
-#     - z
-#     - u
-#     - v
+Naming/MethodParameterName:
+  AllowedNames:
+  - id
+  - x
+  - y
+  - z
+  - u
+  - v
+
 
 # TODO: Use autofix on this
 Style/StringLiterals:
   Enabled: false
+
+# TODO:
+Style/TrailingCommaInArrayLiteral:
+  Enabled: false
+
+# TODO:
+Style/TrailingCommaInHashLiteral:
+  Enabled: false
+
+
+# Enable the cop that checks for Ruby compatibility.
+# Lint/Syntax:
+  # Enabled: true
