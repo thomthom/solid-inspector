@@ -106,7 +106,7 @@ module TT::Plugins::SolidInspector2
         @deactivating = true
         @window.close
       end
-      view&.invalidate # TODO: workaround, might be nil
+      view.invalidate if view
 
       stop_observing_model(Sketchup.active_model)
       stop_observing_app

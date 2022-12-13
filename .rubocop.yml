@@ -20,6 +20,11 @@ AllCops:
   TargetRubyVersion: 2.0
 
 
+# Enable the cop that checks for Ruby compatibility.
+Lint/Syntax:
+  Enabled: true
+
+
 Layout/EmptyLineBetweenDefs:
   Exclude:
   - src/tt_solid_inspector2/settings.rb
@@ -78,8 +83,3 @@ Style/TrailingCommaInArrayLiteral:
 # TODO:
 Style/TrailingCommaInHashLiteral:
   Enabled: false
-
-
-# Enable the cop that checks for Ruby compatibility.
-# Lint/Syntax:
-  # Enabled: true
