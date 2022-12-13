@@ -23,6 +23,7 @@ AllCops:
 Layout/EmptyLineBetweenDefs:
   Exclude:
   - src/tt_solid_inspector2/settings.rb
+  - src/tt_solid_inspector2/inspector_tool.rb
 
 # TODO:
 Layout/FirstArgumentIndentation:
@@ -52,6 +53,7 @@ Naming/MethodName:
   Exclude:
     - src/tt_solid_inspector2/core.rb
     - src/tt_solid_inspector2/debug_tools.rb
+    - src/tt_solid_inspector2/inspector_tool.rb
     - Tests/**/*
 
 # TODO: Add these to sketchup-style.yml
