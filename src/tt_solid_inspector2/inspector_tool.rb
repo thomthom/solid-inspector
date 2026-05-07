@@ -363,7 +363,8 @@ module TT::Plugins::SolidInspector2
       @reanalyze ||= Execution::Debounce.new(0.05)
       @reanalyze.call do
         analyze
-        Sketchup.active_model.active_view.invalidate
+        model = Sketchup.active_model
+        model.active_view.invalidate if model && model.active_view
       end
     end
 
@@ -371,6 +372,8 @@ module TT::Plugins::SolidInspector2
       #puts "analyse"
 
       model = Sketchup.active_model
+      return if model.nil?
+
       entities = model.active_entities
       instance_path = model.active_path || []
       transformation = Geom::Transformation.new
