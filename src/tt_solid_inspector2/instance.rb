@@ -35,12 +35,12 @@ module TT::Plugins::SolidInspector2
         if instance.entities.parent.instances.include?(instance)
           return instance.entities.parent
         else
-          Sketchup.active_model.definitions.each { |definition|
+          instance.model.definitions.each { |definition|
             return definition if definition.instances.include?(instance)
           }
         end
       elsif instance.is_a?(Sketchup::Image)
-        Sketchup.active_model.definitions.each { |definition|
+        instance.model.definitions.each { |definition|
           if definition.image? && definition.instances.include?(instance)
             return definition
           end
