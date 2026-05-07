@@ -363,7 +363,8 @@ module TT::Plugins::SolidInspector2
       @reanalyze ||= Execution::Debounce.new(0.05)
       @reanalyze.call do
         analyze
-        Sketchup.active_model&.active_view&.invalidate
+        model = Sketchup.active_model
+        model.active_view.invalidate if model && model.active_view
       end
     end
 
